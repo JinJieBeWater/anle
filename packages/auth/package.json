@@ -1,0 +1,24 @@
+{
+  "name": "@anle/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@anle/db": "workspace:*",
+    "@anle/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@anle/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

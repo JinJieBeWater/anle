@@ -1,0 +1,3 @@
+{
+  "extends": "@anle/config/tsconfig.base.json"
+}
