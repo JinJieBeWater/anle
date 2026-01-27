@@ -13,13 +13,19 @@ import { authClient } from "@/lib/auth-client";
 
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/utils/orpc";
 
 export default function UserMenu() {
   const navigate = useNavigate();
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending } = useQuery({
+    queryKey: ["auth", "session"],
+    queryFn: () => authClient.getSession(),
+    select: (res) => res.data,
+  });
 
   if (isPending) {
-    return <Skeleton className="h-9 w-24" />;
+    return <Skeleton className="h-8 w-24" />;
   }
 
   if (!session) {
@@ -46,6 +52,9 @@ export default function UserMenu() {
               authClient.signOut({
                 fetchOptions: {
                   onSuccess: () => {
+                    queryClient.invalidateQueries({
+                      queryKey: ["auth", "session"],
+                    });
                     navigate({
                       to: "/",
                     });

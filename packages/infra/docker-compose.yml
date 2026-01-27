@@ -1,0 +1,11 @@
+name: anle
+
+include:
+  # Creates a standard Postgress instance
+  - path: anle-postgres.yaml
+
+  # Creates the internal MongoDB replica set
+  - path: anle-mongo.yaml
+
+  # Creates the PowerSync service
+  - path: anle-powersync.yaml

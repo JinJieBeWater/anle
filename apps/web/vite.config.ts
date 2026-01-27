@@ -5,6 +5,11 @@ import path from "node:path";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
+const coopHeaders = {
+  "Cross-Origin-Opener-Policy": "same-origin",
+  "Cross-Origin-Embedder-Policy": "require-corp",
+};
+
 export default defineConfig({
   plugins: [
     tailwindcss(),
@@ -29,5 +34,14 @@ export default defineConfig({
   },
   server: {
     port: 3001,
+    headers: coopHeaders,
+  },
+  preview: {
+    headers: coopHeaders,
+  },
+  optimizeDeps: {
+    // Don't optimize these packages as they contain web workers and WASM files.
+    // https://github.com/vitejs/vite/issues/11672#issuecomment-1415820673
+    exclude: ["@powersync/web"],
   },
 });

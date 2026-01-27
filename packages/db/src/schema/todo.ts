@@ -1,7 +1,7 @@
-import { pgTable, text, boolean, serial } from "drizzle-orm/pg-core";
+import { pgTable, text, boolean, uuid } from "drizzle-orm/pg-core";
 
 export const todo = pgTable("todo", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").defaultRandom().primaryKey(),
   text: text("text").notNull(),
   completed: boolean("completed").default(false).notNull(),
 });

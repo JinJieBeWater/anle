@@ -47,11 +47,11 @@ function TodosRoute() {
     }
   };
 
-  const handleToggleTodo = (id: number, completed: boolean) => {
+  const handleToggleTodo = (id: string, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: number) => {
+  const handleDeleteTodo = (id: string) => {
     deleteMutation.mutate({ id });
   };
 

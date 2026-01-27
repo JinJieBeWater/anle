@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: anle-postgres
+    environment:
+      PGPORT: ${PG_DATABASE_PORT}
+      POSTGRES_DB: ${PG_DATABASE_NAME}
+      POSTGRES_USER: ${PG_DATABASE_USER}
+      POSTGRES_PASSWORD: ${PG_DATABASE_PASSWORD}
+    ports:
+      - "${PG_DATABASE_PORT}:${PG_DATABASE_PORT}"
+    volumes:
+      - anle_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_DATABASE_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    command: ["postgres", "-c", "wal_level=logical"]
+
+volumes:
+  anle_postgres_data:

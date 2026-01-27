@@ -1,0 +1,11 @@
+{
+  "name": "@anle/infra",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "infra:start": "docker compose -f docker-compose.yml up -d",
+    "infra:watch": "docker compose -f docker-compose.yml up",
+    "infra:stop": "docker compose -f docker-compose.yml stop",
+    "infra:down": "docker compose -f docker-compose.yml down"
+  }
+}

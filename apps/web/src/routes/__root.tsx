@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { orpc } from "@/utils/orpc";
 
 import "../index.css";
+import { SystemProvider } from "@/components/providers/system-provider";
 
 export interface RouterAppContext {
   orpc: typeof orpc;
@@ -47,11 +48,13 @@ function RootComponent() {
         disableTransitionOnChange
         storageKey="vite-ui-theme"
       >
-        <div className="grid grid-rows-[auto_1fr] h-svh">
-          <Header />
-          <Outlet />
-        </div>
-        <Toaster richColors />
+        <SystemProvider>
+          <div className="grid grid-rows-[auto_1fr] h-svh">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+        </SystemProvider>
       </ThemeProvider>
       <TanStackRouterDevtools position="bottom-left" />
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />

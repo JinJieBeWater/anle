@@ -1,0 +1,4 @@
+bucket_definitions:
+  user_todos: # name for the bucket
+    data: # Data Query, selecting data
+      - SELECT * FROM todo

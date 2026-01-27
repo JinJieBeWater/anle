@@ -3,6 +3,7 @@ import * as schema from "@anle/db/schema/auth";
 import { env } from "@anle/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { jwt } from "better-auth/plugins";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -21,5 +22,11 @@ export const auth = betterAuth({
       httpOnly: true,
     },
   },
-  plugins: [],
+  plugins: [
+    jwt({
+      jwt: {
+        audience: "powersync",
+      },
+    }),
+  ],
 });
