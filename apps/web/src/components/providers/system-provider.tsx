@@ -3,54 +3,34 @@ import { createContext, Suspense, useContext, useEffect, useState } from "react"
 
 import Loader from "@/components/loader";
 import { Connector } from "@/lib/powersync/connector";
-import { APP_SCHEMA, TodoDeserializationSchema, TodoSchema } from "@/lib/powersync/schema";
-import { authClient } from "@/lib/auth-client";
+import { switchToSyncedSchema } from "@/lib/powersync/switcher";
+import { SessionProvider, useSession } from "@/components/providers/session-provider";
 import { PowerSyncContext } from "@powersync/react";
-import {
-  LogLevel,
-  PowerSyncDatabase,
-  WASQLiteOpenFactory,
-  WASQLiteVFS,
-  createBaseLogger,
-} from "@powersync/web";
-import { createCollection } from "@tanstack/react-db";
-import { powerSyncCollectionOptions } from "@tanstack/powersync-db-collection";
-import { useQuery } from "@tanstack/react-query";
+import { LogLevel, PowerSyncDatabase, createBaseLogger } from "@powersync/web";
+import { db, DB_FILENAME } from "@/lib/powersync/db";
+import { getSyncEnabled } from "@/lib/powersync/sync-mode";
 
 const PowerSyncConnectorContext = createContext<Connector | null>(null);
 
-export const useConnector = () => useContext(PowerSyncConnectorContext);
+export const useConnector = () => {
+  const context = useContext(PowerSyncConnectorContext);
+  if (!context) {
+    throw new Error("useConnector must be used within SystemProvider");
+  }
+  return context;
+};
 
-export const db = new PowerSyncDatabase({
-  schema: APP_SCHEMA,
-  database: new WASQLiteOpenFactory({
-    dbFilename: "anle.db",
-    vfs: WASQLiteVFS.OPFSCoopSyncVFS,
-  }),
-});
-
-export const todoCollection = createCollection(
-  powerSyncCollectionOptions({
-    database: db,
-    table: APP_SCHEMA.props.todo,
-    schema: TodoSchema,
-    deserializationSchema: TodoDeserializationSchema,
-    onDeserializationError: (error) => {
-      console.error(
-        `Could not deserialize todo collection: ${error.issues.map((issue) => issue.message).join(", ")}`,
-      );
-    },
-  }),
-);
-
-export const SystemProvider = ({ children }: { children: ReactNode }) => {
+const SystemProviderInner = ({ children }: { children: ReactNode }) => {
   const [connector] = useState(() => new Connector());
   const [powerSync] = useState(db);
-  const { data: session, isPending } = useQuery({
-    queryKey: ["auth", "session"],
-    queryFn: () => authClient.getSession(),
-    select: (res) => res.data,
-  });
+
+  const { session, isSuccess } = useSession();
+
+  useEffect(() => {
+    if (isSuccess) {
+      connector.updateSession(session);
+    }
+  }, [isSuccess, session]);
 
   useEffect(() => {
     const logger = createBaseLogger();
@@ -59,21 +39,24 @@ export const SystemProvider = ({ children }: { children: ReactNode }) => {
     (window as { _powersync?: PowerSyncDatabase })._powersync = powerSync;
 
     powerSync.init();
+
+    const l = connector.registerListener({
+      initialized: () => {},
+      sessionStarted: async () => {
+        let isSyncMode = getSyncEnabled(DB_FILENAME);
+
+        // Switch to sync mode if the user is logged in for first time
+        if (!isSyncMode) {
+          await switchToSyncedSchema(db, connector.currentSession?.user.id!);
+        }
+        powerSync.connect(connector);
+      },
+    });
+
     connector.init();
+
+    return () => l?.();
   }, [connector, powerSync]);
-
-  useEffect(() => {
-    if (isPending) {
-      return;
-    }
-    connector.updateSession(session || null);
-
-    if (session) {
-      powerSync.connect(connector);
-    } else {
-      powerSync.disconnect();
-    }
-  }, [connector, isPending, powerSync, session]);
 
   return (
     <Suspense fallback={<Loader />}>
@@ -85,3 +68,9 @@ export const SystemProvider = ({ children }: { children: ReactNode }) => {
     </Suspense>
   );
 };
+
+export const SystemProvider = ({ children }: { children: ReactNode }) => (
+  <SessionProvider>
+    <SystemProviderInner>{children}</SystemProviderInner>
+  </SessionProvider>
+);

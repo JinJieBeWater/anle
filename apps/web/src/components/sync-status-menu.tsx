@@ -36,10 +36,10 @@ export default function SyncStatusMenu() {
   const isUploading = Boolean(status.dataFlowStatus?.uploading);
   const isDownloading = Boolean(status.dataFlowStatus?.downloading);
   const isOnline = isConnected || isConnecting;
-  const canConnect = Boolean(connector);
   const wifiTone = isOnline ? "" : "text-muted-foreground";
   const WifiIcon = isOnline ? Wifi : WifiOff;
   const flowLabel = getFlowLabel(isUploading, isDownloading);
+
   const handleConnect = () => {
     if (!connector) {
       return;
@@ -79,7 +79,7 @@ export default function SyncStatusMenu() {
           {isOnline ? (
             <DropdownMenuItem onClick={handleDisconnect}>Disconnect</DropdownMenuItem>
           ) : (
-            <DropdownMenuItem disabled={!canConnect} onClick={handleConnect}>
+            <DropdownMenuItem disabled={!connector.canConnect} onClick={handleConnect}>
               Connect
             </DropdownMenuItem>
           )}

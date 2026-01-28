@@ -3,7 +3,7 @@ import { todo } from "@anle/db/schema/todo";
 
 export const todoCreateInputSchema = createInsertSchema(todo, {
   text: (schema) => schema.min(1).max(255),
-}).pick({ id: true, text: true });
+}).pick({ id: true, text: true, owner_id: true });
 
 export const todoToggleInputSchema = createUpdateSchema(todo)
   .pick({ id: true, completed: true })

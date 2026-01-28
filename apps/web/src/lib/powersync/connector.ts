@@ -7,19 +7,10 @@ import {
   type PowerSyncCredentials,
 } from "@powersync/web";
 import { authClient } from "../auth-client";
-import type { Session, User } from "better-auth";
-import { queryClient } from "@/utils/orpc";
+import { GetSessionQueryOptions, queryClient } from "@/utils/orpc";
 import { handleCrudOp } from "./handler";
-
-const GetSessionQueryOptions = {
-  queryKey: ["auth", "session"],
-  queryFn: () => authClient.getSession(),
-};
-
-type AnleSession = {
-  user: User;
-  session: Session;
-};
+import type { AnleSession } from "./types";
+import { shouldNeverHappen } from "@/utils/should-never-happen";
 
 export type AnleConfig = {
   powersyncUrl: string;
@@ -67,9 +58,9 @@ export class Connector
       return;
     }
 
-    const sessionResponse = await queryClient.fetchQuery(GetSessionQueryOptions);
+    const session = await queryClient.fetchQuery(GetSessionQueryOptions);
 
-    this.updateSession(sessionResponse.data);
+    this.updateSession(session.data);
 
     this.ready = true;
     this.iterateListeners((cb) => cb.initialized?.());
@@ -93,6 +84,11 @@ export class Connector
   }
 
   async uploadData(database: AbstractPowerSyncDatabase): Promise<void> {
+    const session = this.currentSession;
+    if (!session) {
+      throw shouldNeverHappen("Cannot upload data without an active session");
+    }
+
     const transaction = await database.getNextCrudTransaction();
 
     if (!transaction) {
@@ -105,7 +101,7 @@ export class Connector
       // or edge functions to process the entire transaction in a single call.
       for (const op of transaction.crud) {
         lastOp = op;
-        await handleCrudOp(op);
+        await handleCrudOp(op, { session });
       }
 
       await transaction.complete();
@@ -131,10 +127,21 @@ export class Connector
   }
 
   updateSession(session: AnleSession | null) {
+    const isFirstLogin = this.currentSession === null && session !== null;
     this.currentSession = session;
     if (!session) {
       return;
     }
-    this.iterateListeners((cb) => cb.sessionStarted?.(session));
+    if (isFirstLogin) {
+      this.iterateListeners((cb) => cb.sessionStarted?.(session));
+    }
+  }
+
+  removeSession() {
+    this.updateSession(null);
+  }
+
+  get canConnect(): boolean {
+    return this.ready && this.currentSession !== null;
   }
 }

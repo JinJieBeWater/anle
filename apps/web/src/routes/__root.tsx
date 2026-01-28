@@ -11,10 +11,12 @@ import { orpc } from "@/utils/orpc";
 
 import "../index.css";
 import { SystemProvider } from "@/components/providers/system-provider";
+import type { PowerSyncDatabase } from "@powersync/web";
 
 export interface RouterAppContext {
   orpc: typeof orpc;
   queryClient: QueryClient;
+  db: PowerSyncDatabase;
 }
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({

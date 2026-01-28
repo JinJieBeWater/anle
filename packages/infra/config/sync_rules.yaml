@@ -1,4 +1,6 @@
 bucket_definitions:
   user_todos: # name for the bucket
+    # Parameter Query, selecting a user_id parameter:
+    parameters: SELECT request.user_id() as user_id
     data: # Data Query, selecting data
-      - SELECT * FROM todo
+      - SELECT * FROM todo WHERE owner_id = bucket.user_id

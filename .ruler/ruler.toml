@@ -26,6 +26,9 @@ args = ["shadcn@latest", "mcp"]
 url = "https://mcp.chonkie.ai/better-auth/better-auth-builder/mcp"
 
 
+[mcp_servers.powersync]
+url = "https://docs.powersync.com/mcp"
+
 # --- Global .gitignore Configuration ---
 [gitignore]
 # Enable/disable automatic .gitignore updates (default: true)

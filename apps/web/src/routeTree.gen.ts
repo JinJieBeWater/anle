@@ -9,17 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from "./routes/__root";
-import { Route as TodosRouteImport } from "./routes/todos";
 import { Route as TanstackDbTodosRouteImport } from "./routes/tanstack-db-todos";
 import { Route as LoginRouteImport } from "./routes/login";
 import { Route as DashboardRouteImport } from "./routes/dashboard";
 import { Route as IndexRouteImport } from "./routes/index";
 
-const TodosRoute = TodosRouteImport.update({
-  id: "/todos",
-  path: "/todos",
-  getParentRoute: () => rootRouteImport,
-} as any);
 const TanstackDbTodosRoute = TanstackDbTodosRouteImport.update({
   id: "/tanstack-db-todos",
   path: "/tanstack-db-todos",
@@ -46,14 +40,12 @@ export interface FileRoutesByFullPath {
   "/dashboard": typeof DashboardRoute;
   "/login": typeof LoginRoute;
   "/tanstack-db-todos": typeof TanstackDbTodosRoute;
-  "/todos": typeof TodosRoute;
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
   "/dashboard": typeof DashboardRoute;
   "/login": typeof LoginRoute;
   "/tanstack-db-todos": typeof TanstackDbTodosRoute;
-  "/todos": typeof TodosRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
@@ -61,14 +53,13 @@ export interface FileRoutesById {
   "/dashboard": typeof DashboardRoute;
   "/login": typeof LoginRoute;
   "/tanstack-db-todos": typeof TanstackDbTodosRoute;
-  "/todos": typeof TodosRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/dashboard" | "/login" | "/tanstack-db-todos" | "/todos";
+  fullPaths: "/" | "/dashboard" | "/login" | "/tanstack-db-todos";
   fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/dashboard" | "/login" | "/tanstack-db-todos" | "/todos";
-  id: "__root__" | "/" | "/dashboard" | "/login" | "/tanstack-db-todos" | "/todos";
+  to: "/" | "/dashboard" | "/login" | "/tanstack-db-todos";
+  id: "__root__" | "/" | "/dashboard" | "/login" | "/tanstack-db-todos";
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
@@ -76,18 +67,10 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute;
   LoginRoute: typeof LoginRoute;
   TanstackDbTodosRoute: typeof TanstackDbTodosRoute;
-  TodosRoute: typeof TodosRoute;
 }
 
 declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    "/todos": {
-      id: "/todos";
-      path: "/todos";
-      fullPath: "/todos";
-      preLoaderRoute: typeof TodosRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
     "/tanstack-db-todos": {
       id: "/tanstack-db-todos";
       path: "/tanstack-db-todos";
@@ -124,7 +107,6 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   TanstackDbTodosRoute: TanstackDbTodosRoute,
-  TodosRoute: TodosRoute,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -12,21 +12,39 @@ import {
 import { authClient } from "@/lib/auth-client";
 
 import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
-import { useQuery } from "@tanstack/react-query";
-import { queryClient } from "@/utils/orpc";
+import { useSession } from "@/components/providers/session-provider";
+import { useConnector } from "./providers/system-provider";
+import { useCallback } from "react";
+import { usePowerSync } from "@powersync/react";
+import { setSyncEnabled } from "@/lib/powersync/sync-mode";
+import { switchToLocalSchema } from "@/lib/powersync/switcher";
+import { queryClient, SessionQueryKey } from "@/utils/orpc";
 
 export default function UserMenu() {
   const navigate = useNavigate();
-  const { data: session, isPending } = useQuery({
-    queryKey: ["auth", "session"],
-    queryFn: () => authClient.getSession(),
-    select: (res) => res.data,
-  });
+  const { session } = useSession();
+  const connector = useConnector();
+  const powerSync = usePowerSync();
 
-  if (isPending) {
-    return <Skeleton className="h-8 w-24" />;
-  }
+  const handleSignOut = useCallback(async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: async () => {
+          navigate({
+            to: "/",
+            replace: true,
+          });
+          connector?.removeSession();
+          setSyncEnabled(powerSync.database.name, false);
+          await queryClient.invalidateQueries({
+            queryKey: SessionQueryKey,
+          });
+          await powerSync.disconnectAndClear();
+          await switchToLocalSchema(powerSync);
+        },
+      },
+    });
+  }, [connector, navigate]);
 
   if (!session) {
     return (
@@ -46,23 +64,7 @@ export default function UserMenu() {
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => {
-              authClient.signOut({
-                fetchOptions: {
-                  onSuccess: () => {
-                    queryClient.invalidateQueries({
-                      queryKey: ["auth", "session"],
-                    });
-                    navigate({
-                      to: "/",
-                    });
-                  },
-                },
-              });
-            }}
-          >
+          <DropdownMenuItem variant="destructive" onClick={handleSignOut}>
             Sign Out
           </DropdownMenuItem>
         </DropdownMenuGroup>

@@ -10,8 +10,11 @@ export const todoRouter = {
   }),
 
   create: publicProcedure.input(todoCreateInputSchema).handler(async ({ input }) => {
-    const values = input.id ? { id: input.id, text: input.text } : { text: input.text };
-    return await db.insert(todo).values(values);
+    return await db.insert(todo).values({
+      id: input.id,
+      text: input.text,
+      owner_id: input.owner_id,
+    });
   }),
 
   toggle: publicProcedure.input(todoToggleInputSchema).handler(async ({ input }) => {

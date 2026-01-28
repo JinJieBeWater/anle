@@ -2,7 +2,7 @@ import { UpdateType, type CrudEntry } from "@powersync/web";
 
 import { shouldNeverHappen } from "@/utils/should-never-happen";
 import { todoHandler } from "./todo";
-import { normalizeTableName } from "./utils";
+import type { UploadContext } from "../types";
 
 const handlers = {
   todo: todoHandler,
@@ -10,8 +10,8 @@ const handlers = {
 
 type HandlerMap = typeof handlers;
 
-export const handleCrudOp = async (op: CrudEntry) => {
-  const table = normalizeTableName(op.table) as keyof HandlerMap;
+export const handleCrudOp = async (op: CrudEntry, context: UploadContext) => {
+  const table = op.table as keyof HandlerMap;
   const handler = handlers[table];
 
   if (!handler) {
@@ -21,16 +21,16 @@ export const handleCrudOp = async (op: CrudEntry) => {
   switch (op.op) {
     case UpdateType.PUT: {
       const data = handler.putSchema.parse(op.opData);
-      await handler.put(op, data);
+      await handler.put(op, data, context);
       break;
     }
     case UpdateType.PATCH: {
       const data = handler.patchSchema.parse(op.opData);
-      await handler.patch(op, data);
+      await handler.patch(op, data, context);
       break;
     }
     case UpdateType.DELETE: {
-      await handler.remove(op);
+      await handler.remove(op, context);
       break;
     }
   }
