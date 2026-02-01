@@ -3,8 +3,14 @@ import { UpdateType, type CrudEntry } from "@powersync/web";
 import { shouldNeverHappen } from "@/utils/should-never-happen";
 import { todoHandler } from "./todo";
 import { documentHandler } from "./document";
-import type { TableHandler, UploadContext } from "../types";
+import type { TableHandler, UploadContext } from "./types";
 import { documentUpdateHandler } from "./document-update";
+
+const handlers = {
+  todo: todoHandler,
+  document: documentHandler,
+  document_update: documentUpdateHandler,
+} satisfies Record<string, TableHandler<any, any>>;
 
 const handleTableOp = async <TPut, TPatch>(
   op: CrudEntry,
@@ -30,17 +36,13 @@ const handleTableOp = async <TPut, TPatch>(
 };
 
 export const handleCrudOp = async (op: CrudEntry, context: UploadContext) => {
-  switch (op.table) {
-    case "todo":
-      await handleTableOp(op, context, todoHandler);
-      return;
-    case "document":
-      await handleTableOp(op, context, documentHandler);
-      return;
-    case "document_update":
-      await handleTableOp(op, context, documentUpdateHandler);
-      return;
-    default:
-      shouldNeverHappen(`Unsupported table for upload: ${op.table}`, op);
+  const handler = handlers[op.table as keyof typeof handlers] as TableHandler<any, any> | undefined;
+  if (!handler) {
+    shouldNeverHappen(`Unsupported table for upload: ${op.table}`, op);
+    return;
   }
+  await handleTableOp(op, context, handler);
 };
+
+export const buildUploadBatchers = () =>
+  Object.values(handlers).flatMap((handler) => handler.buildBatchers?.() ?? []);

@@ -1,9 +1,8 @@
-import { z } from "zod";
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 
 import { orpc } from "@/utils/orpc";
 import { shouldNeverHappen } from "@/utils/should-never-happen";
-import type { TableHandler } from "../types";
+import { createHandler } from "./utils";
 import { document } from "@anle/db/schema/document";
 import { stringToDate } from "../zod-helpers";
 
@@ -12,8 +11,6 @@ const documentCreateInputSchema = createInsertSchema(document, {
   created_at: stringToDate,
 }).omit({ id: true });
 
-type DocumentCreateInput = z.infer<typeof documentCreateInputSchema>;
-
 const documentPatchSchema = createUpdateSchema(document, {
   title: (schema) => schema.min(1).max(255).optional(),
 })
@@ -21,9 +18,7 @@ const documentPatchSchema = createUpdateSchema(document, {
   .omit({ id: true, created_at: true })
   .refine((value) => Object.keys(value).length > 0, "document patch cannot be empty");
 
-type DocumentPatchInput = z.infer<typeof documentPatchSchema>;
-
-export const documentHandler: TableHandler<DocumentCreateInput, DocumentPatchInput> = {
+export const documentHandler = createHandler({
   putSchema: documentCreateInputSchema,
   patchSchema: documentPatchSchema,
   put: async (op, data, _context) => {
@@ -44,4 +39,4 @@ export const documentHandler: TableHandler<DocumentCreateInput, DocumentPatchInp
   remove: async (op, _context) => {
     await orpc.document.delete.call({ id: op.id });
   },
-};
+});

@@ -106,12 +106,10 @@ function RouteComponent() {
                 </AlertDialogTrigger>
                 <AlertDialogContent size="sm">
                   <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Confirm all clients synced before compacting
-                    </AlertDialogTitle>
+                    <AlertDialogTitle>Confirm sync before compacting</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Please confirm all other clients have finished syncing before you compact. If
-                      not, you may lose updates that haven’t synced yet.
+                      Ensure all other clients have finished syncing before you compact, or you may
+                      lose updates that have not synced yet.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

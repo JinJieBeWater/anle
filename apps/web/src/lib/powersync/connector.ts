@@ -3,17 +3,14 @@ import {
   AbstractPowerSyncDatabase,
   BaseObserver,
   CrudEntry,
-  UpdateType,
   type PowerSyncBackendConnector,
   type PowerSyncCredentials,
 } from "@powersync/web";
 import { authClient } from "../auth-client";
-import { GetSessionQueryOptions, orpc, queryClient } from "@/utils/orpc";
-import { handleCrudOp } from "./handler";
+import { GetSessionQueryOptions, queryClient } from "@/utils/orpc";
+import { buildUploadBatchers, handleCrudOp } from "./handler";
 import type { AnleSession } from "./types";
 import { shouldNeverHappen } from "@/utils/should-never-happen";
-import type z from "zod";
-import { documentUpdateCreateInputSchema } from "./handler/document-update";
 
 export type AnleConfig = {
   powersyncUrl: string;
@@ -99,49 +96,21 @@ export class Connector
     }
 
     let lastOp: CrudEntry | null = null;
-    const batchDocumentUpdates: (z.infer<typeof documentUpdateCreateInputSchema> & {
-      id: string;
-    })[] = [];
-    const batchDeletedDocumentUpdateIds: string[] = [];
+    const batchers = buildUploadBatchers();
     try {
       for (const op of transaction.crud) {
         lastOp = op;
-        if (op.table === "document_update" && op.op === UpdateType.PUT) {
-          const batchDocumentUpdate = documentUpdateCreateInputSchema.parse(op.opData);
-          batchDocumentUpdates.push({
-            ...batchDocumentUpdate,
-            id: op.id,
-          });
-          continue;
-        }
-        if (op.table === "document_update" && op.op === UpdateType.DELETE) {
-          batchDeletedDocumentUpdateIds.push(op.id);
+        const batcher = batchers.find((candidate) => candidate.match(op));
+        if (batcher) {
+          batcher.add(op);
           continue;
         }
 
         await handleCrudOp(op, { session });
       }
 
-      if (batchDocumentUpdates.length > 0) {
-        try {
-          await orpc.documentUpdate.batchCreate.call(batchDocumentUpdates);
-        } catch (error) {
-          throw shouldNeverHappen(
-            "Could not upload document updates:",
-            error instanceof Error ? error.message : error,
-          );
-        }
-      }
-
-      if (batchDeletedDocumentUpdateIds.length > 0) {
-        try {
-          await orpc.documentUpdate.batchDelete.call(batchDeletedDocumentUpdateIds);
-        } catch (error) {
-          throw shouldNeverHappen(
-            "Could not delete document updates:",
-            error instanceof Error ? error.message : error,
-          );
-        }
+      for (const batcher of batchers) {
+        await batcher.flush({ session });
       }
 
       await transaction.complete();
