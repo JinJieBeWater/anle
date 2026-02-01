@@ -12,17 +12,11 @@ export const documentUpdateSchema = {
       update_data: z.string(),
     }),
   ),
-  gc: createInsertSchema(documentUpdate, {
-    update_data: z.string(),
-  })
-    .pick({
-      document_id: true,
-    })
-    .required(),
+  batchDelete: z.array(z.uuid()),
 };
 
 export namespace DocumentUpdateInput {
   export type Create = z.infer<typeof documentUpdateSchema.create>;
   export type BatchCreate = z.infer<typeof documentUpdateSchema.batchCreate>;
-  export type Gc = z.infer<typeof documentUpdateSchema.gc>;
+  export type BatchDelete = z.infer<typeof documentUpdateSchema.batchDelete>;
 }

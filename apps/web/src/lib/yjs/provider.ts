@@ -197,4 +197,63 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
       [this.options.documentId],
     );
   }
+
+  async gcLocalUpdates() {
+    await this.flushPendingUpdates();
+
+    return this.db.writeTransaction(async (tx) => {
+      const updates = await tx.getAll<{ id: string; update_data: string; created_at: string }>(
+        /* sql */ `
+          SELECT
+            id,
+            update_data,
+            created_at
+          FROM
+            document_update
+          WHERE
+            document_id = ?
+          ORDER BY
+            created_at ASC
+        `,
+        [this.options.documentId],
+      );
+
+      if (updates.length <= 1) {
+        return {
+          success: `0 document_update rows compacted for document_id=${this.options.documentId}`,
+        };
+      }
+
+      const ydoc = new Y.Doc({ gc: true });
+      for (const update of updates) {
+        Y.applyUpdateV2(ydoc, b64ToUint8Array(update.update_data));
+      }
+      const compactUpdate = Uint8ArrayTob64(Y.encodeStateAsUpdateV2(ydoc));
+      ydoc.destroy();
+
+      const updateIds = updates.map((update) => update.id);
+      const latestCreatedAt = updates[updates.length - 1]?.created_at ?? new Date().toISOString();
+
+      const chunkSize = 200;
+      for (let i = 0; i < updateIds.length; i += chunkSize) {
+        const chunk = updateIds.slice(i, i + chunkSize);
+        const placeholders = chunk.map(() => "?").join(", ");
+        await tx.execute(`DELETE FROM document_update WHERE id IN (${placeholders})`, chunk);
+      }
+
+      await tx.execute(
+        /* sql */ `
+          INSERT INTO
+            document_update (id, document_id, created_at, update_data)
+          VALUES
+            (?, ?, ?, ?)
+        `,
+        [crypto.randomUUID(), this.options.documentId, latestCreatedAt, compactUpdate],
+      );
+
+      return {
+        success: `${updates.length} document_update rows compacted for document_id=${this.options.documentId}`,
+      };
+    });
+  }
 }

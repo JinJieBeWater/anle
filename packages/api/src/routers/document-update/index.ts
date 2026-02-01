@@ -1,4 +1,4 @@
-import { protectedProcedure, publicProcedure } from "../../index";
+import { publicProcedure } from "../../index";
 import { documentUpdateService } from "./service";
 import { documentUpdateSchema } from "./schema";
 
@@ -12,8 +12,9 @@ export const documentUpdateRouter = {
     .handler(async ({ input }) => {
       return await documentUpdateService.batchCreateDocumentUpdates(input);
     }),
-
-  gc: protectedProcedure.input(documentUpdateSchema.gc).handler(async ({ input }) => {
-    return await documentUpdateService.gcDocumentUpdates(input);
-  }),
+  batchDelete: publicProcedure
+    .input(documentUpdateSchema.batchDelete)
+    .handler(async ({ input }) => {
+      return await documentUpdateService.batchDeleteDocumentUpdates(input);
+    }),
 };

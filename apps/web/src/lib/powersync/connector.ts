@@ -102,6 +102,7 @@ export class Connector
     const batchDocumentUpdates: (z.infer<typeof documentUpdateCreateInputSchema> & {
       id: string;
     })[] = [];
+    const batchDeletedDocumentUpdateIds: string[] = [];
     try {
       for (const op of transaction.crud) {
         lastOp = op;
@@ -111,6 +112,10 @@ export class Connector
             ...batchDocumentUpdate,
             id: op.id,
           });
+          continue;
+        }
+        if (op.table === "document_update" && op.op === UpdateType.DELETE) {
+          batchDeletedDocumentUpdateIds.push(op.id);
           continue;
         }
 
@@ -123,6 +128,17 @@ export class Connector
         } catch (error) {
           throw shouldNeverHappen(
             "Could not upload document updates:",
+            error instanceof Error ? error.message : error,
+          );
+        }
+      }
+
+      if (batchDeletedDocumentUpdateIds.length > 0) {
+        try {
+          await orpc.documentUpdate.batchDelete.call(batchDeletedDocumentUpdateIds);
+        } catch (error) {
+          throw shouldNeverHappen(
+            "Could not delete document updates:",
             error instanceof Error ? error.message : error,
           );
         }

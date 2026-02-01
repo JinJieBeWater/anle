@@ -11,6 +11,9 @@ type GuardBySyncProps = {
 
 export const GuardBySync = ({ children, priority }: GuardBySyncProps) => {
   const status = useStatus();
+  if (!status.connected) {
+    return children;
+  }
   const hasSynced =
     priority == null ? status.hasSynced : status.statusForPriority(priority).hasSynced;
 

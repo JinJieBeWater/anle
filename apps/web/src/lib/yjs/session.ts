@@ -106,6 +106,16 @@ export const flushYjsSnapshot = async (documentId: string, stateVector?: Uint8Ar
   await session.provider.storeSnapshot(stateVector);
 };
 
+export const gcYjsDocumentUpdates = async (documentId: string) => {
+  const session = SESSION_CACHE.get(documentId);
+  if (!session?.provider) {
+    return {
+      success: `0 document_update rows compacted for document_id=${documentId}`,
+    };
+  }
+  return session.provider.gcLocalUpdates();
+};
+
 export const clearAllYjsSessions = () => {
   for (const [documentId, session] of SESSION_CACHE) {
     clearCleanupTimer(session);
