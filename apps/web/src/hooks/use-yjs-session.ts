@@ -1,7 +1,7 @@
 import { usePowerSync } from "@powersync/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { acquireYjsSession, getCachedYDoc, releaseYjsSession } from "./session";
+import { acquireYjsSession, getCachedYDoc, releaseYjsSession } from "../lib/yjs/session";
 
 export const useYjsSession = (documentId: string) => {
   const powerSync = usePowerSync();
