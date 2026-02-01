@@ -13,6 +13,11 @@ export const TODO_TABLE_DEF: TableDefinition = {
     completed: column.integer,
     owner_id: column.text,
   },
+  options: {
+    indexes: {
+      by_owner: ["owner_id"],
+    },
+  },
 };
 
 export const TodoSchema = createSelectSchema(todo);
@@ -22,4 +27,4 @@ export const TodoDeserializationSchema = z.object({
   completed: numberToBoolean,
 });
 
-export type TodoRecord = z.output<typeof TodoSchema>;
+export type Todo = z.output<typeof TodoSchema>;

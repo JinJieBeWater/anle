@@ -8,97 +8,125 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as TanstackDbTodosRouteImport } from "./routes/tanstack-db-todos";
-import { Route as LoginRouteImport } from "./routes/login";
-import { Route as DashboardRouteImport } from "./routes/dashboard";
-import { Route as IndexRouteImport } from "./routes/index";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as TanstackDbTodosRouteImport } from './routes/tanstack-db-todos'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as CrdtDocumentIdRouteImport } from './routes/crdt.$documentId'
 
 const TanstackDbTodosRoute = TanstackDbTodosRouteImport.update({
-  id: "/tanstack-db-todos",
-  path: "/tanstack-db-todos",
+  id: '/tanstack-db-todos',
+  path: '/tanstack-db-todos',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const LoginRoute = LoginRouteImport.update({
-  id: "/login",
-  path: "/login",
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
-  id: "/dashboard",
-  path: "/dashboard",
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
+const CrdtDocumentIdRoute = CrdtDocumentIdRouteImport.update({
+  id: '/crdt/$documentId',
+  path: '/crdt/$documentId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/dashboard": typeof DashboardRoute;
-  "/login": typeof LoginRoute;
-  "/tanstack-db-todos": typeof TanstackDbTodosRoute;
+  '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/tanstack-db-todos': typeof TanstackDbTodosRoute
+  '/crdt/$documentId': typeof CrdtDocumentIdRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/dashboard": typeof DashboardRoute;
-  "/login": typeof LoginRoute;
-  "/tanstack-db-todos": typeof TanstackDbTodosRoute;
+  '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/tanstack-db-todos': typeof TanstackDbTodosRoute
+  '/crdt/$documentId': typeof CrdtDocumentIdRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/dashboard": typeof DashboardRoute;
-  "/login": typeof LoginRoute;
-  "/tanstack-db-todos": typeof TanstackDbTodosRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/tanstack-db-todos': typeof TanstackDbTodosRoute
+  '/crdt/$documentId': typeof CrdtDocumentIdRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/dashboard" | "/login" | "/tanstack-db-todos";
-  fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/dashboard" | "/login" | "/tanstack-db-todos";
-  id: "__root__" | "/" | "/dashboard" | "/login" | "/tanstack-db-todos";
-  fileRoutesById: FileRoutesById;
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/tanstack-db-todos'
+    | '/crdt/$documentId'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/' | '/dashboard' | '/login' | '/tanstack-db-todos' | '/crdt/$documentId'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/tanstack-db-todos'
+    | '/crdt/$documentId'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  DashboardRoute: typeof DashboardRoute;
-  LoginRoute: typeof LoginRoute;
-  TanstackDbTodosRoute: typeof TanstackDbTodosRoute;
+  IndexRoute: typeof IndexRoute
+  DashboardRoute: typeof DashboardRoute
+  LoginRoute: typeof LoginRoute
+  TanstackDbTodosRoute: typeof TanstackDbTodosRoute
+  CrdtDocumentIdRoute: typeof CrdtDocumentIdRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/tanstack-db-todos": {
-      id: "/tanstack-db-todos";
-      path: "/tanstack-db-todos";
-      fullPath: "/tanstack-db-todos";
-      preLoaderRoute: typeof TanstackDbTodosRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/login": {
-      id: "/login";
-      path: "/login";
-      fullPath: "/login";
-      preLoaderRoute: typeof LoginRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/dashboard": {
-      id: "/dashboard";
-      path: "/dashboard";
-      fullPath: "/dashboard";
-      preLoaderRoute: typeof DashboardRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+    '/tanstack-db-todos': {
+      id: '/tanstack-db-todos'
+      path: '/tanstack-db-todos'
+      fullPath: '/tanstack-db-todos'
+      preLoaderRoute: typeof TanstackDbTodosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crdt/$documentId': {
+      id: '/crdt/$documentId'
+      path: '/crdt/$documentId'
+      fullPath: '/crdt/$documentId'
+      preLoaderRoute: typeof CrdtDocumentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,7 +135,8 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   TanstackDbTodosRoute: TanstackDbTodosRoute,
-};
+  CrdtDocumentIdRoute: CrdtDocumentIdRoute,
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()

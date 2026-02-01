@@ -4,3 +4,9 @@ bucket_definitions:
     parameters: SELECT request.user_id() as user_id
     data: # Data Query, selecting data
       - SELECT * FROM todo WHERE owner_id = bucket.user_id
+  documents:
+    data:
+      - SELECT * FROM document
+  document_updates:
+    data:
+      - SELECT id, document_id, base64(update_data) as update_data, created_at FROM document_update

@@ -49,6 +49,8 @@ coverage
 tmp
 temp
 
+references
+
 # START Ruler Generated Files
 /.codex/config.json
 /.codex/config.json.bak

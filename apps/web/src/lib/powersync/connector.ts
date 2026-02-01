@@ -3,14 +3,17 @@ import {
   AbstractPowerSyncDatabase,
   BaseObserver,
   CrudEntry,
+  UpdateType,
   type PowerSyncBackendConnector,
   type PowerSyncCredentials,
 } from "@powersync/web";
 import { authClient } from "../auth-client";
-import { GetSessionQueryOptions, queryClient } from "@/utils/orpc";
+import { GetSessionQueryOptions, orpc, queryClient } from "@/utils/orpc";
 import { handleCrudOp } from "./handler";
 import type { AnleSession } from "./types";
 import { shouldNeverHappen } from "@/utils/should-never-happen";
+import type z from "zod";
+import { documentUpdateCreateInputSchema } from "./handler/document-update";
 
 export type AnleConfig = {
   powersyncUrl: string;
@@ -96,12 +99,33 @@ export class Connector
     }
 
     let lastOp: CrudEntry | null = null;
+    const batchDocumentUpdates: (z.infer<typeof documentUpdateCreateInputSchema> & {
+      id: string;
+    })[] = [];
     try {
-      // Note: If transactional consistency is important, use database functions
-      // or edge functions to process the entire transaction in a single call.
       for (const op of transaction.crud) {
         lastOp = op;
+        if (op.table === "document_update" && op.op === UpdateType.PUT) {
+          const batchDocumentUpdate = documentUpdateCreateInputSchema.parse(op.opData);
+          batchDocumentUpdates.push({
+            ...batchDocumentUpdate,
+            id: op.id,
+          });
+          continue;
+        }
+
         await handleCrudOp(op, { session });
+      }
+
+      if (batchDocumentUpdates.length > 0) {
+        try {
+          await orpc.documentUpdate.batchCreate.call(batchDocumentUpdates);
+        } catch (error) {
+          throw shouldNeverHappen(
+            "Could not upload document updates:",
+            error instanceof Error ? error.message : error,
+          );
+        }
       }
 
       await transaction.complete();
@@ -145,3 +169,5 @@ export class Connector
     return this.ready && this.currentSession !== null;
   }
 }
+
+export const connector = new Connector();

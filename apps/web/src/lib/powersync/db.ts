@@ -3,7 +3,7 @@ import { SYNCED_SCHEMA, LOCAL_SCHEMA } from "./schema";
 import { getSyncEnabled } from "./sync-mode";
 
 export const DB_FILENAME = "anle.db";
-export const initialSyncEnabled = getSyncEnabled(DB_FILENAME);
+const initialSyncEnabled = getSyncEnabled(DB_FILENAME);
 const initialSchema = initialSyncEnabled ? SYNCED_SCHEMA : LOCAL_SCHEMA;
 
 export const db = new PowerSyncDatabase({

@@ -1,0 +1,200 @@
+import * as Y from "yjs";
+
+import { b64ToUint8Array, Uint8ArrayTob64 } from "./binary";
+import { AbstractPowerSyncDatabase } from "@powersync/web";
+import { ObservableV2 } from "lib0/observable";
+import { isComposing } from "@/components/editor/extensions/ime-update-optimizer";
+import type { DocumentUpdate } from "@/lib/powersync/schema";
+
+export interface PowerSyncYjsEvents {
+  /**
+   * Triggered when document contents have been loaded from the database the first time.
+   *
+   * The document data may not have been synced from the PowerSync service at this point.
+   */
+  synced: () => void;
+}
+
+export type YjsProviderOptions = {
+  documentId: string;
+  onLoaded?: () => void;
+  /**
+   * Throttle window in milliseconds for persisting updates.
+   * Defaults to 200ms.
+   */
+  throttleMs?: number;
+};
+
+/**
+ * Configure bidirectional sync for a Yjs document with a PowerSync database.
+ *
+ * Updates are stored in the `document_update` table in the database.
+ *
+ * @param ydoc
+ * @param db
+ * @param options
+ */
+export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
+  private abortController = new AbortController();
+  private pendingUpdates: Uint8Array[] = [];
+  private throttleTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly throttleMs: number;
+
+  constructor(
+    public readonly doc: Y.Doc,
+    public readonly db: AbstractPowerSyncDatabase,
+    public readonly options: YjsProviderOptions,
+  ) {
+    super();
+    this._storeUpdate = this._storeUpdate.bind(this);
+    this.destroy = this.destroy.bind(this);
+    this.flushPendingUpdates = this.flushPendingUpdates.bind(this);
+    this.throttleMs = this.options.throttleMs ?? 300;
+
+    let synced = false;
+    // oxlint-disable-next-line typescript/no-this-alias
+    const origin = this;
+
+    /**
+     * Watch for changes to the `document_update` table for this document.
+     * This will be used to apply updates from other editors.
+     * When we received an added item we apply the update to the Yjs document.
+     */
+    const updateQuery = db
+      .query<
+        Omit<DocumentUpdate, "update_data"> & {
+          update_data: string;
+        }
+      >({
+        sql: /* sql */ `
+          SELECT
+            *
+          FROM
+            document_update
+          WHERE
+            document_id = ?
+        `,
+        parameters: [this.options.documentId],
+      })
+      .differentialWatch();
+
+    updateQuery.registerListener({
+      onStateChange: (state) => {
+        if (state.isLoading === false) {
+          this.options.onLoaded?.();
+        }
+      },
+      onDiff: async (diff) => {
+        for (const added of diff.added) {
+          /**
+           * Local document updates get stored to the database and synced.
+           *
+           * These updates here originate from syncing remote updates.
+           * Applying these updates to YJS should not result in the `_storeUpdate`
+           * handler creating a new `document_update` record since we mark the `origin`
+           * here and check the `origin` in `_storeUpdate`.
+           */
+          Y.applyUpdateV2(doc, b64ToUint8Array(added.update_data), origin);
+        }
+        if (!synced) {
+          synced = true;
+          this.emit("synced", []);
+        }
+      },
+      onError: (error) => {
+        console.error("Error in YjsProvider update query:", error);
+      },
+    });
+
+    this.abortController.signal.addEventListener(
+      "abort",
+      () => {
+        // Stop the watch query when the abort signal is triggered
+        updateQuery.close();
+      },
+      { once: true },
+    );
+
+    doc.on("updateV2", this._storeUpdate);
+    doc.on("destroy", this.destroy);
+  }
+
+  private async _storeUpdate(update: Uint8Array, origin: any) {
+    if (origin === this) {
+      // update originated from the database / PowerSync - ignore
+      return;
+    }
+    if (isComposing(this.options.documentId)) {
+      return;
+    }
+    this.queueUpdate(update);
+  }
+
+  async storeSnapshot(stateVector?: Uint8Array) {
+    await this.persistUpdate(Y.encodeStateAsUpdateV2(this.doc, stateVector));
+  }
+
+  private async persistUpdate(update: Uint8Array) {
+    await this.db.execute(
+      /* sql */ `
+        INSERT INTO
+          document_update (id, document_id, created_at, update_data)
+        VALUES
+          (?, ?, ?, ?)
+      `,
+      [
+        crypto.randomUUID(),
+        this.options.documentId,
+        new Date().toISOString(),
+        Uint8ArrayTob64(update),
+      ],
+    );
+  }
+
+  private queueUpdate(update: Uint8Array) {
+    this.pendingUpdates.push(update);
+    if (this.throttleTimer) {
+      return;
+    }
+    this.throttleTimer = setTimeout(this.flushPendingUpdates, this.throttleMs);
+  }
+
+  private async flushPendingUpdates() {
+    if (this.throttleTimer) {
+      clearTimeout(this.throttleTimer);
+      this.throttleTimer = null;
+    }
+    if (this.pendingUpdates.length === 0) return;
+    const updates = this.pendingUpdates;
+    this.pendingUpdates = [];
+
+    const merged = updates.length === 1 ? updates[0] : Y.mergeUpdatesV2(updates);
+    await this.persistUpdate(merged);
+  }
+
+  /**
+   * Destroy this persistence provider, removing any attached event listeners.
+   */
+  destroy() {
+    this.abortController.abort();
+    void this.flushPendingUpdates();
+    this.doc.off("updateV2", this._storeUpdate);
+    this.doc.off("destroy", this.destroy);
+  }
+
+  /**
+   * Delete data associated with this document from the database.
+   *
+   * Also call `destroy()` to remove any event listeners and prevent future updates to the database.
+   */
+  async deleteData() {
+    await this.db.execute(
+      /* sql */ `
+        DELETE FROM document_update
+        WHERE
+          document_id = ?
+      `,
+      [this.options.documentId],
+    );
+  }
+}

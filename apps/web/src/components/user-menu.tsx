@@ -17,12 +17,13 @@ import { useConnector } from "./providers/system-provider";
 import { useCallback } from "react";
 import { usePowerSync } from "@powersync/react";
 import { setSyncEnabled } from "@/lib/powersync/sync-mode";
-import { switchToLocalSchema } from "@/lib/powersync/switcher";
+import { switchToLocalSchema } from "@/lib/powersync/utils";
 import { queryClient, SessionQueryKey } from "@/utils/orpc";
+import { clearAllYjsSessions } from "@/lib/yjs/session";
 
 export default function UserMenu() {
   const navigate = useNavigate();
-  const { session } = useSession();
+  const { session, removeSession } = useSession();
   const connector = useConnector();
   const powerSync = usePowerSync();
 
@@ -30,21 +31,23 @@ export default function UserMenu() {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: async () => {
-          navigate({
-            to: "/",
-            replace: true,
-          });
           connector?.removeSession();
+          removeSession();
           setSyncEnabled(powerSync.database.name, false);
           await queryClient.invalidateQueries({
             queryKey: SessionQueryKey,
           });
+          clearAllYjsSessions();
           await powerSync.disconnectAndClear();
           await switchToLocalSchema(powerSync);
+          navigate({
+            to: "/",
+            replace: true,
+          });
         },
       },
     });
-  }, [connector, navigate]);
+  }, [connector, navigate, powerSync, removeSession]);
 
   if (!session) {
     return (

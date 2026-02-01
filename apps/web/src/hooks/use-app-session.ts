@@ -10,7 +10,7 @@ export const useAppSession = () => {
     return {
       ...sessionState,
       session,
-      userId: session!.user.id,
+      userId: session.user.id,
       isAuthenticated: true,
       isLocalMode: false,
     };

@@ -2,36 +2,45 @@ import { UpdateType, type CrudEntry } from "@powersync/web";
 
 import { shouldNeverHappen } from "@/utils/should-never-happen";
 import { todoHandler } from "./todo";
-import type { UploadContext } from "../types";
+import { documentHandler } from "./document";
+import type { TableHandler, UploadContext } from "../types";
+import { documentUpdateHandler } from "./document-update";
 
-const handlers = {
-  todo: todoHandler,
-} as const;
-
-type HandlerMap = typeof handlers;
-
-export const handleCrudOp = async (op: CrudEntry, context: UploadContext) => {
-  const table = op.table as keyof HandlerMap;
-  const handler = handlers[table];
-
-  if (!handler) {
-    shouldNeverHappen(`Unsupported table for upload: ${op.table}`, op);
-  }
-
+const handleTableOp = async <TPut, TPatch>(
+  op: CrudEntry,
+  context: UploadContext,
+  handler: TableHandler<TPut, TPatch>,
+) => {
   switch (op.op) {
     case UpdateType.PUT: {
       const data = handler.putSchema.parse(op.opData);
       await handler.put(op, data, context);
-      break;
+      return;
     }
     case UpdateType.PATCH: {
       const data = handler.patchSchema.parse(op.opData);
       await handler.patch(op, data, context);
-      break;
+      return;
     }
     case UpdateType.DELETE: {
       await handler.remove(op, context);
-      break;
+      return;
     }
+  }
+};
+
+export const handleCrudOp = async (op: CrudEntry, context: UploadContext) => {
+  switch (op.table) {
+    case "todo":
+      await handleTableOp(op, context, todoHandler);
+      return;
+    case "document":
+      await handleTableOp(op, context, documentHandler);
+      return;
+    case "document_update":
+      await handleTableOp(op, context, documentUpdateHandler);
+      return;
+    default:
+      shouldNeverHappen(`Unsupported table for upload: ${op.table}`, op);
   }
 };

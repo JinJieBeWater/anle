@@ -1,6 +1,8 @@
 import { Schema, Table } from "@powersync/web";
 import { TODO_TABLE_DEF } from "./todo";
+import { DOCUMENT_TABLE_DEF, DOCUMENT_UPDATE_TABLE_DEF } from "./document";
 export * from "./todo";
+export * from "./document";
 
 const syncedViewName = (tableName: string, synced: boolean) =>
   synced ? tableName : `inactive_synced_${tableName}`;
@@ -18,6 +20,24 @@ export const makeSchema = (synced: boolean) =>
       ...TODO_TABLE_DEF.options,
       localOnly: true,
       viewName: localViewName(TODO_TABLE_DEF.name, synced),
+    }),
+    document: new Table(DOCUMENT_TABLE_DEF.columns, {
+      ...DOCUMENT_TABLE_DEF.options,
+      viewName: syncedViewName(DOCUMENT_TABLE_DEF.name, synced),
+    }),
+    local_document: new Table(DOCUMENT_TABLE_DEF.columns, {
+      ...DOCUMENT_TABLE_DEF.options,
+      localOnly: true,
+      viewName: localViewName(DOCUMENT_TABLE_DEF.name, synced),
+    }),
+    document_update: new Table(DOCUMENT_UPDATE_TABLE_DEF.columns, {
+      ...DOCUMENT_UPDATE_TABLE_DEF.options,
+      viewName: syncedViewName(DOCUMENT_UPDATE_TABLE_DEF.name, synced),
+    }),
+    local_document_update: new Table(DOCUMENT_UPDATE_TABLE_DEF.columns, {
+      ...DOCUMENT_UPDATE_TABLE_DEF.options,
+      localOnly: true,
+      viewName: localViewName(DOCUMENT_UPDATE_TABLE_DEF.name, synced),
     }),
   });
 

@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
-import { createContext, Suspense, useContext, useEffect, useState } from "react";
+import { createContext, Suspense, useContext, useEffect } from "react";
 
 import Loader from "@/components/loader";
-import { Connector } from "@/lib/powersync/connector";
-import { switchToSyncedSchema } from "@/lib/powersync/switcher";
+import { connector, Connector } from "@/lib/powersync/connector";
+import { switchToSyncedSchema } from "@/lib/powersync/utils";
 import { SessionProvider, useSession } from "@/components/providers/session-provider";
 import { PowerSyncContext } from "@powersync/react";
 import { LogLevel, PowerSyncDatabase, createBaseLogger } from "@powersync/web";
@@ -21,9 +21,6 @@ export const useConnector = () => {
 };
 
 const SystemProviderInner = ({ children }: { children: ReactNode }) => {
-  const [connector] = useState(() => new Connector());
-  const [powerSync] = useState(db);
-
   const { session, isSuccess } = useSession();
 
   useEffect(() => {
@@ -36,9 +33,9 @@ const SystemProviderInner = ({ children }: { children: ReactNode }) => {
     const logger = createBaseLogger();
     logger.useDefaults();
     logger.setLevel(LogLevel.DEBUG);
-    (window as { _powersync?: PowerSyncDatabase })._powersync = powerSync;
+    (window as { _powersync?: PowerSyncDatabase })._powersync = db;
 
-    powerSync.init();
+    db.init();
 
     const l = connector.registerListener({
       initialized: () => {},
@@ -49,18 +46,18 @@ const SystemProviderInner = ({ children }: { children: ReactNode }) => {
         if (!isSyncMode) {
           await switchToSyncedSchema(db, connector.currentSession?.user.id!);
         }
-        powerSync.connect(connector);
+        db.connect(connector);
       },
     });
 
     connector.init();
 
     return () => l?.();
-  }, [connector, powerSync]);
+  }, []);
 
   return (
     <Suspense fallback={<Loader />}>
-      <PowerSyncContext.Provider value={powerSync}>
+      <PowerSyncContext.Provider value={db}>
         <PowerSyncConnectorContext.Provider value={connector}>
           {children}
         </PowerSyncConnectorContext.Provider>

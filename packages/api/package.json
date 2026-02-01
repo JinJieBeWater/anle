@@ -22,6 +22,7 @@
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "drizzle-zod": "catalog:",
+    "yjs": "^13.6.29",
     "zod": "catalog:"
   },
   "devDependencies": {

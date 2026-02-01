@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -11,6 +11,7 @@ type SessionContextValue = {
   session: AnleSession | null;
   isPending: boolean;
   isSuccess: boolean;
+  removeSession: () => void;
 };
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -30,8 +31,12 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
     setCachedSession(data);
   }, [data, isSuccess, setCachedSession]);
 
+  const removeSession = useCallback(() => {
+    setCachedSession(null);
+  }, [setCachedSession]);
+
   const value = useMemo(
-    () => ({ session: cachedSession, isPending, isSuccess }),
+    () => ({ session: cachedSession, isPending, isSuccess, removeSession }),
     [cachedSession, isPending, isSuccess],
   );
 
