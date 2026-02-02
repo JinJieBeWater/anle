@@ -22,7 +22,8 @@
     "infra:stop": "turbo -F @anle/infra infra:stop",
     "infra:down": "turbo -F @anle/infra infra:down",
     "check": "oxlint && oxfmt --write",
-    "ruler:apply": "pnpm dlx @intellectronica/ruler@latest apply --local-only"
+    "ruler:apply": "pnpm dlx @intellectronica/ruler@latest apply --local-only",
+    "mastra:dev": "turbo -F @anle/mastra mastra:dev"
   },
   "dependencies": {
     "@anle/env": "workspace:*",

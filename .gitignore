@@ -51,6 +51,9 @@ temp
 
 references
 
+# START Mastra Generated Files
+packages/mastra/.mastra/*
+
 # START Ruler Generated Files
 /.codex/config.json
 /.codex/config.json.bak
@@ -65,3 +68,4 @@ references
 /opencode.json
 /opencode.json.bak
 # END Ruler Generated Files
+

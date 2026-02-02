@@ -43,6 +43,9 @@
     },
     "infra:down": {
       "cache": false
+    },
+    "mastra:dev": {
+      "cache": false
     }
   }
 }

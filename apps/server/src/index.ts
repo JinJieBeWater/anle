@@ -2,6 +2,8 @@ import { createContext } from "@anle/api/context";
 import { appRouter } from "@anle/api/routers/index";
 import { auth } from "@anle/auth";
 import { env } from "@anle/env/server";
+import { mastra } from "@anle/mastra";
+import { MastraServer, type HonoBindings, type HonoVariables } from "@mastra/hono";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
@@ -10,8 +12,10 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { requireAuth } from "./middleware/require-auth";
 
-const app = new Hono();
+const app = new Hono<{ Bindings: HonoBindings; Variables: HonoVariables }>();
+const server = new MastraServer({ app, mastra, prefix: "/ai" });
 
 app.use(logger());
 app.use(
@@ -25,6 +29,10 @@ app.use(
 );
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+
+app.use("/ai/*", requireAuth);
+
+await server.init();
 
 export const apiHandler = new OpenAPIHandler(appRouter, {
   plugins: [
