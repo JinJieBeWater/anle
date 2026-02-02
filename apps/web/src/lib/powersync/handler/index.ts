@@ -4,12 +4,12 @@ import { shouldNeverHappen } from "@/utils/should-never-happen";
 import { todoHandler } from "./todo";
 import { documentHandler } from "./document";
 import type { TableHandler, UploadContext } from "./types";
-import { documentUpdateHandler } from "./document-update";
+import { yjsUpdateHandler } from "./yjs-update";
 
 const handlers = {
   todo: todoHandler,
   document: documentHandler,
-  document_update: documentUpdateHandler,
+  yjs_update: yjsUpdateHandler,
 } satisfies Record<string, TableHandler<any, any>>;
 
 const handleTableOp = async <TPut, TPatch>(

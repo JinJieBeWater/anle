@@ -4,7 +4,7 @@ import { b64ToUint8Array, Uint8ArrayTob64 } from "./binary";
 import { AbstractPowerSyncDatabase } from "@powersync/web";
 import { ObservableV2 } from "lib0/observable";
 import { isComposing } from "@/components/editor/extensions/ime-update-optimizer";
-import type { DocumentUpdate } from "@/lib/powersync/schema";
+import type { YjsUpdate } from "@/lib/powersync/schema";
 
 export interface PowerSyncYjsEvents {
   /**
@@ -16,7 +16,8 @@ export interface PowerSyncYjsEvents {
 }
 
 export type YjsProviderOptions = {
-  documentId: string;
+  entityType: string;
+  entityId: string;
   onLoaded?: () => void;
   /**
    * Throttle window in milliseconds for persisting updates.
@@ -28,7 +29,7 @@ export type YjsProviderOptions = {
 /**
  * Configure bidirectional sync for a Yjs document with a PowerSync database.
  *
- * Updates are stored in the `document_update` table in the database.
+ * Updates are stored in the `yjs_update` table in the database.
  *
  * @param ydoc
  * @param db
@@ -39,6 +40,7 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
   private pendingUpdates: Uint8Array[] = [];
   private throttleTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly throttleMs: number;
+  private readonly documentId: string;
 
   constructor(
     public readonly doc: Y.Doc,
@@ -50,19 +52,20 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
     this.destroy = this.destroy.bind(this);
     this.flushPendingUpdates = this.flushPendingUpdates.bind(this);
     this.throttleMs = this.options.throttleMs ?? 300;
+    this.documentId = this.options.entityId;
 
     let synced = false;
     // oxlint-disable-next-line typescript/no-this-alias
     const origin = this;
 
     /**
-     * Watch for changes to the `document_update` table for this document.
+     * Watch for changes to the `yjs_update` table for this entity.
      * This will be used to apply updates from other editors.
      * When we received an added item we apply the update to the Yjs document.
      */
     const updateQuery = db
       .query<
-        Omit<DocumentUpdate, "update_data"> & {
+        Omit<YjsUpdate, "update_data"> & {
           update_data: string;
         }
       >({
@@ -70,11 +73,12 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
           SELECT
             *
           FROM
-            document_update
+            yjs_update
           WHERE
-            document_id = ?
+            entity_type = ?
+            AND entity_id = ?
         `,
-        parameters: [this.options.documentId],
+        parameters: [this.options.entityType, this.options.entityId],
       })
       .differentialWatch();
 
@@ -87,11 +91,11 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
       onDiff: async (diff) => {
         for (const added of diff.added) {
           /**
-           * Local document updates get stored to the database and synced.
+           * Local entity updates get stored to the database and synced.
            *
            * These updates here originate from syncing remote updates.
            * Applying these updates to YJS should not result in the `_storeUpdate`
-           * handler creating a new `document_update` record since we mark the `origin`
+           * handler creating a new `yjs_update` record since we mark the `origin`
            * here and check the `origin` in `_storeUpdate`.
            */
           Y.applyUpdateV2(doc, b64ToUint8Array(added.update_data), origin);
@@ -124,7 +128,7 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
       // update originated from the database / PowerSync - ignore
       return;
     }
-    if (isComposing(this.options.documentId)) {
+    if (isComposing(this.documentId)) {
       return;
     }
     this.queueUpdate(update);
@@ -138,13 +142,14 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
     await this.db.execute(
       /* sql */ `
         INSERT INTO
-          document_update (id, document_id, created_at, update_data)
+          yjs_update (id, entity_type, entity_id, created_at, update_data)
         VALUES
-          (?, ?, ?, ?)
+          (?, ?, ?, ?, ?)
       `,
       [
         crypto.randomUUID(),
-        this.options.documentId,
+        this.options.entityType,
+        this.options.entityId,
         new Date().toISOString(),
         Uint8ArrayTob64(update),
       ],
@@ -183,18 +188,19 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
   }
 
   /**
-   * Delete data associated with this document from the database.
+   * Delete data associated with this entity from the database.
    *
    * Also call `destroy()` to remove any event listeners and prevent future updates to the database.
    */
   async deleteData() {
     await this.db.execute(
       /* sql */ `
-        DELETE FROM document_update
+        DELETE FROM yjs_update
         WHERE
-          document_id = ?
+          entity_type = ?
+          AND entity_id = ?
       `,
-      [this.options.documentId],
+      [this.options.entityType, this.options.entityId],
     );
   }
 
@@ -209,18 +215,19 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
             update_data,
             created_at
           FROM
-            document_update
+            yjs_update
           WHERE
-            document_id = ?
+            entity_type = ?
+            AND entity_id = ?
           ORDER BY
             created_at ASC
         `,
-        [this.options.documentId],
+        [this.options.entityType, this.options.entityId],
       );
 
       if (updates.length <= 1) {
         return {
-          success: `0 document_update rows compacted for document_id=${this.options.documentId}`,
+          success: `0 yjs_update rows compacted for ${this.options.entityType}=${this.options.entityId}`,
         };
       }
 
@@ -238,21 +245,27 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
       for (let i = 0; i < updateIds.length; i += chunkSize) {
         const chunk = updateIds.slice(i, i + chunkSize);
         const placeholders = chunk.map(() => "?").join(", ");
-        await tx.execute(`DELETE FROM document_update WHERE id IN (${placeholders})`, chunk);
+        await tx.execute(`DELETE FROM yjs_update WHERE id IN (${placeholders})`, chunk);
       }
 
       await tx.execute(
         /* sql */ `
           INSERT INTO
-            document_update (id, document_id, created_at, update_data)
+            yjs_update (id, entity_type, entity_id, created_at, update_data)
           VALUES
-            (?, ?, ?, ?)
+            (?, ?, ?, ?, ?)
         `,
-        [crypto.randomUUID(), this.options.documentId, latestCreatedAt, compactUpdate],
+        [
+          crypto.randomUUID(),
+          this.options.entityType,
+          this.options.entityId,
+          latestCreatedAt,
+          compactUpdate,
+        ],
       );
 
       return {
-        success: `${updates.length} document_update rows compacted for document_id=${this.options.documentId}`,
+        success: `${updates.length} yjs_update rows compacted for ${this.options.entityType}=${this.options.entityId}`,
       };
     });
   }

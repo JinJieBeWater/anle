@@ -36,7 +36,8 @@ export type EditorOptions = {
 };
 
 export function useEditor(documentId: string, options: EditorOptions = {}) {
-  const { isLoaded, ydoc } = useYjsSession(documentId);
+  const session = useYjsSession(documentId, "document");
+  const { ydoc, flushSnapshot, gcUpdates } = session;
   const characterLimit = options.characterLimit ?? DEFAULT_CHARACTER_LIMIT;
   const placeholder = options.placeholder ?? DEFAULT_PLACEHOLDER;
 
@@ -60,6 +61,7 @@ export function useEditor(documentId: string, options: EditorOptions = {}) {
         ImeUpdateOptimizer.configure({
           documentId,
           document: ydoc,
+          flushSnapshot,
         }),
         Collaboration.configure({
           document: ydoc,
@@ -82,12 +84,13 @@ export function useEditor(documentId: string, options: EditorOptions = {}) {
   const isLimitReached = characterLimit > 0 ? charactersCount >= characterLimit : false;
 
   return {
-    isLoaded,
+    ...session,
     editor,
     charactersCount,
     wordsCount,
     characterLimit,
     percentage,
     isLimitReached,
+    gcUpdates,
   };
 }

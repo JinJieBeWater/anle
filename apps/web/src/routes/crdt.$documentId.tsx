@@ -29,7 +29,6 @@ import { toast } from "sonner";
 import { Editor } from "@/components/editor/editor";
 import { useEditor } from "@/hooks/use-editor";
 import { GuardBySync } from "@/components/guard-by-sync";
-import { gcYjsDocumentUpdates } from "@/lib/yjs/session";
 
 export const Route = createFileRoute("/crdt/$documentId")({
   component: RouteComponent,
@@ -68,10 +67,11 @@ function RouteComponent() {
     characterLimit,
     percentage,
     isLimitReached,
+    gcUpdates,
   } = useEditor(documentId);
 
   const gcMutation = useMutation({
-    mutationFn: () => gcYjsDocumentUpdates(documentId),
+    mutationFn: () => gcUpdates(),
   });
 
   const handleGc = async () => {
@@ -127,7 +127,7 @@ function RouteComponent() {
               {isLoaded ? (
                 <Editor
                   editor={editor}
-                  className="h-[60vh] [&_.ProseMirror]:min-h-65 [&_.ProseMirror]:px-4 [&_.ProseMirror]:py-3 [&_.ProseMirror]:text-sm [&_.ProseMirror]:leading-7 [&_.ProseMirror]:outline-none [&_.ProseMirror]:pb-80"
+                  className="h-[60vh] [&_.ProseMirror]:min-h-65 [&_.ProseMirror]:px-4 [&_.ProseMirror]:py-3 [&_.ProseMirror]:text-sm [&_.ProseMirror]:leading-7 [&_.ProseMirror]:outline-none [&_.ProseMirror]:pb-80 [&_.ProseMirror]:wrap-anywhere!"
                 />
               ) : (
                 <ScrollArea className="h-[60vh]">

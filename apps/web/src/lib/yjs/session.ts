@@ -5,6 +5,11 @@ import { YjsProvider } from "./provider";
 
 type LoadedCallback = () => void;
 
+export type YjsTarget = {
+  entityType: string;
+  entityId: string;
+};
+
 type YjsSession = {
   ydoc: Y.Doc;
   provider?: YjsProvider;
@@ -17,6 +22,8 @@ type YjsSession = {
 const SESSION_CACHE = new Map<string, YjsSession>();
 const CLEANUP_DELAY_MS = 60_000;
 
+const getSessionKey = (target: YjsTarget) => `${target.entityType}:${target.entityId}`;
+
 const createSession = (): YjsSession => ({
   ydoc: new Y.Doc(),
   refs: 0,
@@ -24,11 +31,12 @@ const createSession = (): YjsSession => ({
   pendingLoaded: new Set(),
 });
 
-const getOrCreateSession = (documentId: string): YjsSession => {
-  let session = SESSION_CACHE.get(documentId);
+const getOrCreateSession = (target: YjsTarget): YjsSession => {
+  const key = getSessionKey(target);
+  let session = SESSION_CACHE.get(key);
   if (!session) {
     session = createSession();
-    SESSION_CACHE.set(documentId, session);
+    SESSION_CACHE.set(key, session);
   }
   return session;
 };
@@ -47,25 +55,26 @@ const runLoadedCallbacks = (session: YjsSession) => {
   session.pendingLoaded.clear();
 };
 
-const ensureProvider = (session: YjsSession, db: AbstractPowerSyncDatabase, documentId: string) => {
+const ensureProvider = (session: YjsSession, db: AbstractPowerSyncDatabase, target: YjsTarget) => {
   if (session.provider?.db === db) return;
   session.provider?.destroy();
   session.loaded = false;
   session.provider = new YjsProvider(session.ydoc, db, {
-    documentId,
+    entityType: target.entityType,
+    entityId: target.entityId,
     onLoaded: () => runLoadedCallbacks(session),
   });
 };
 
-export const getCachedYDoc = (documentId: string): Y.Doc => getOrCreateSession(documentId).ydoc;
+export const getCachedYDoc = (target: YjsTarget): Y.Doc => getOrCreateSession(target).ydoc;
 
 export const acquireYjsSession = (
   db: AbstractPowerSyncDatabase,
-  documentId: string,
+  target: YjsTarget,
   onLoaded?: LoadedCallback,
 ) => {
-  const session = getOrCreateSession(documentId);
-  ensureProvider(session, db, documentId);
+  const session = getOrCreateSession(target);
+  ensureProvider(session, db, target);
   session.refs += 1;
   clearCleanupTimer(session);
 
@@ -80,8 +89,9 @@ export const acquireYjsSession = (
   return session;
 };
 
-export const releaseYjsSession = (documentId: string, onLoaded?: LoadedCallback) => {
-  const session = SESSION_CACHE.get(documentId);
+export const releaseYjsSession = (target: YjsTarget, onLoaded?: LoadedCallback) => {
+  const key = getSessionKey(target);
+  const session = SESSION_CACHE.get(key);
   if (!session) return;
 
   if (onLoaded) {
@@ -95,35 +105,35 @@ export const releaseYjsSession = (documentId: string, onLoaded?: LoadedCallback)
       if (session.refs !== 0) return;
       session.provider?.destroy();
       session.ydoc.destroy();
-      SESSION_CACHE.delete(documentId);
+      SESSION_CACHE.delete(key);
     }, CLEANUP_DELAY_MS);
   }
 };
 
-export const flushYjsSnapshot = async (documentId: string, stateVector?: Uint8Array) => {
-  const session = SESSION_CACHE.get(documentId);
+export const flushYjsSnapshot = async (target: YjsTarget, stateVector?: Uint8Array) => {
+  const session = SESSION_CACHE.get(getSessionKey(target));
   if (!session?.provider) return;
   await session.provider.storeSnapshot(stateVector);
 };
 
-export const gcYjsDocumentUpdates = async (documentId: string) => {
-  const session = SESSION_CACHE.get(documentId);
+export const gcYjsUpdates = async (target: YjsTarget) => {
+  const session = SESSION_CACHE.get(getSessionKey(target));
   if (!session?.provider) {
     return {
-      success: `0 document_update rows compacted for document_id=${documentId}`,
+      success: `0 yjs_update rows compacted for ${target.entityType}=${target.entityId}`,
     };
   }
   return session.provider.gcLocalUpdates();
 };
 
 export const clearAllYjsSessions = () => {
-  for (const [documentId, session] of SESSION_CACHE) {
+  for (const [key, session] of SESSION_CACHE) {
     clearCleanupTimer(session);
     session.pendingLoaded.clear();
     session.refs = 0;
     session.loaded = false;
     session.provider?.destroy();
     session.ydoc.destroy();
-    SESSION_CACHE.delete(documentId);
+    SESSION_CACHE.delete(key);
   }
 };

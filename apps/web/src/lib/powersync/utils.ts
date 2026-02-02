@@ -23,9 +23,9 @@ export const switchToSyncedSchema = async (db: AbstractPowerSyncDatabase, userId
     await tx.execute("DELETE FROM inactive_local_document");
 
     await tx.execute(
-      "INSERT INTO document_update(id, document_id, created_at, update_data) SELECT id, document_id, created_at, update_data FROM inactive_local_document_update",
+      "INSERT INTO yjs_update(id, entity_type, entity_id, created_at, update_data) SELECT id, entity_type, entity_id, created_at, update_data FROM inactive_local_yjs_update",
     );
-    await tx.execute("DELETE FROM inactive_local_document_update");
+    await tx.execute("DELETE FROM inactive_local_yjs_update");
   });
 
   todoCollection.startSyncImmediate();

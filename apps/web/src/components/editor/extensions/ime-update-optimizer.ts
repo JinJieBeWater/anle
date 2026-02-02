@@ -3,8 +3,6 @@ import { Plugin } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import * as Y from "yjs";
 
-import { flushYjsSnapshot } from "@/lib/yjs/session";
-
 const composingDocuments = new Set<string>();
 const compositionStateVectors = new Map<string, Uint8Array>();
 const compositionContentHashes = new Map<string, number>();
@@ -46,14 +44,14 @@ export const isComposing = (documentId: string) => composingDocuments.has(docume
 export type ImeUpdateOptimizerOptions = {
   documentId: string;
   document: Y.Doc;
+  flushSnapshot: (stateVector?: Uint8Array) => void | Promise<void>;
 };
 
 export const ImeUpdateOptimizer = Extension.create<ImeUpdateOptimizerOptions>({
   name: "imeUpdateOptimizer",
 
   addProseMirrorPlugins() {
-    const { documentId, document } = this.options;
-
+    const { documentId, document, flushSnapshot } = this.options;
     return [
       new Plugin({
         props: {
@@ -69,7 +67,7 @@ export const ImeUpdateOptimizer = Extension.create<ImeUpdateOptimizerOptions>({
               if (contentHash !== undefined && contentHash === getDocHash(view)) {
                 return false;
               }
-              void flushYjsSnapshot(documentId, stateVector);
+              void flushSnapshot(stateVector);
               return false;
             },
           },

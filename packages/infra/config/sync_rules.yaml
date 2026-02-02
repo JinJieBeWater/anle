@@ -7,6 +7,6 @@ bucket_definitions:
   documents:
     data:
       - SELECT * FROM document
-  document_updates:
+  yjs_updates:
     data:
-      - SELECT id, document_id, base64(update_data) as update_data, created_at FROM document_update
+      - SELECT id, entity_type, entity_id, base64(update_data) as update_data, created_at FROM yjs_update
