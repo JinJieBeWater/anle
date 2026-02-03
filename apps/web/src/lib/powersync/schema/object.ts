@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { object } from "@anle/db/schema/object";
 import type { TableDefinition } from "../types";
-import { stringToDate } from "../zod-helpers";
+import { stringToDate, stringToJson } from "../zod-helpers";
 
 export const OBJECT_TABLE_DEF: TableDefinition = {
   name: "object",
@@ -25,12 +25,13 @@ export const OBJECT_TABLE_DEF: TableDefinition = {
   },
 };
 
-export const ObjectSchema = createSelectSchema(object);
+export const objectSchema = createSelectSchema(object);
 
-export const ObjectDeserializationSchema = z.object({
-  ...ObjectSchema.shape,
+export const objectDeserializationSchema = z.object({
+  ...objectSchema.shape,
   updated_at: stringToDate,
   created_at: stringToDate,
+  metadata: stringToJson,
 });
 
-export type Object = z.output<typeof ObjectSchema>;
+export type Object = z.output<typeof objectSchema>;

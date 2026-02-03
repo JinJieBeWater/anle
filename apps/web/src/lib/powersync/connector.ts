@@ -130,7 +130,7 @@ export class Connector
       } else {
         // Error may be retryable - e.g. network error or temporary server error.
         // Throwing an error here causes this call to be retried after a delay.
-        throw ex;
+        throw shouldNeverHappen("Data upload error - discarding:", lastOp, ex);
       }
     }
   }

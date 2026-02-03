@@ -20,11 +20,11 @@ export const TODO_TABLE_DEF: TableDefinition = {
   },
 };
 
-export const TodoSchema = createSelectSchema(todo);
+export const todoSchema = createSelectSchema(todo);
 
-export const TodoDeserializationSchema = z.object({
-  ...TodoSchema.shape,
+export const todoDeserializationSchema = z.object({
+  ...todoSchema.shape,
   completed: numberToBoolean,
 });
 
-export type Todo = z.output<typeof TodoSchema>;
+export type Todo = z.output<typeof todoSchema>;

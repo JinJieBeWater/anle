@@ -21,11 +21,11 @@ export const OBJECT_UPDATE_TABLE_DEF: TableDefinition = {
   },
 };
 
-export const ObjectUpdateSchema = createSelectSchema(objectUpdate);
+export const objectUpdateSchema = createSelectSchema(objectUpdate);
 
-export const ObjectUpdateDeserializationSchema = z.object({
-  ...ObjectUpdateSchema.shape,
+export const objectUpdateDeserializationSchema = z.object({
+  ...objectUpdateSchema.shape,
   created_at: stringToDate,
 });
 
-export type ObjectUpdate = z.output<typeof ObjectUpdateSchema>;
+export type ObjectUpdate = z.output<typeof objectUpdateSchema>;

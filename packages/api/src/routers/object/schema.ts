@@ -26,6 +26,29 @@ export const objectSchema = {
   delete: objectInsertSchema.pick({ id: true }),
 };
 
+const templateFieldSchema = z.object({
+  key: z.string(),
+  type: z.string(),
+  required: z.boolean().optional(),
+  default: z.unknown().optional(),
+  options: z.array(z.unknown()).optional(),
+});
+
+const templateObjectSchema = z.object({
+  type: z.string(),
+  label: z.string().optional(),
+  metadataFields: z.array(templateFieldSchema).optional(),
+});
+
+export const templateMetadataVersionSchema = z.object({
+  version: z.number(),
+  objects: z.array(templateObjectSchema),
+});
+
+export const objectTemplateMetadataSchema = z.object({
+  versions: z.array(templateMetadataVersionSchema),
+});
+
 export namespace ObjectInput {
   export type Create = z.infer<typeof objectSchema.create>;
   export type Update = z.infer<typeof objectSchema.update>;
