@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { documentCollection } from "@/lib/collections";
+import { objectCollection } from "@/lib/collections";
 import { useLiveQuery, eq } from "@tanstack/react-db";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -32,29 +32,34 @@ import { GuardBySync } from "@/components/guard-by-sync";
 
 export const Route = createFileRoute("/crdt/$documentId")({
   component: RouteComponent,
-  loader: async ({ params: { documentId } }) => {
-    const state = await documentCollection.stateWhenReady();
-
-    const document = state.get(documentId);
-    if (!document) {
-      console.log("insert");
-      await documentCollection.insert({
-        id: documentId,
-        title: "Untitled document",
-        created_at: new Date(),
-      }).isPersisted.promise;
+  loader: async ({ params: { documentId }, context: { getAppSession } }) => {
+    const { userId: ownerId } = getAppSession();
+    const state = await objectCollection.stateWhenReady();
+    const existing = state.get(documentId);
+    if (existing) {
+      return;
     }
+    await objectCollection.insert({
+      id: documentId,
+      owner_id: ownerId,
+      domain: "journal",
+      type: "journal_entry",
+      name: "Untitled entry",
+      metadata: JSON.stringify({}),
+      created_at: new Date(),
+      updated_at: new Date(),
+    }).isPersisted.promise;
   },
 });
 
 function RouteComponent() {
   const { documentId } = Route.useParams();
 
-  const { data: document } = useLiveQuery(
+  const { data: object } = useLiveQuery(
     (q) =>
       q
-        .from({ document: documentCollection })
-        .where(({ document }) => eq(document.id, documentId))
+        .from({ object: objectCollection })
+        .where(({ object }) => eq(object.id, documentId))
         .findOne(),
     [documentId],
   );
@@ -88,7 +93,7 @@ function RouteComponent() {
       <div className="mx-auto w-full max-w-3xl px-4 py-10">
         <Card>
           <CardHeader>
-            <CardTitle>{document?.title ?? "CRDT Demo"}</CardTitle>
+            <CardTitle>{object?.name ?? "CRDT Demo"}</CardTitle>
             <CardDescription>PowerSync + TipTap integration example.</CardDescription>
             <CardAction className="flex gap-2">
               <AlertDialog>

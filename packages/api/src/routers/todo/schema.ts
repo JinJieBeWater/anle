@@ -7,12 +7,7 @@ export const todoSchema = {
     text: (schema) => schema.min(1).max(255),
   }).pick({ id: true, text: true, owner_id: true }),
   toggle: createUpdateSchema(todo).pick({ id: true, completed: true }).required(),
-  delete: createInsertSchema(todo, {
-    text: (schema) => schema.min(1).max(255),
-  })
-    .pick({ id: true, text: true, owner_id: true })
-    .pick({ id: true })
-    .required(),
+  delete: createInsertSchema(todo).pick({ id: true }).required(),
 };
 
 export namespace TodoInput {

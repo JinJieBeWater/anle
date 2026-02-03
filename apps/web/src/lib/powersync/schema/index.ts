@@ -1,10 +1,10 @@
 import { Schema, Table } from "@powersync/web";
 import { TODO_TABLE_DEF } from "./todo";
-import { DOCUMENT_TABLE_DEF } from "./document";
-import { YJS_UPDATE_TABLE_DEF } from "./yjs-update";
+import { OBJECT_TABLE_DEF } from "./object";
+import { OBJECT_UPDATE_TABLE_DEF } from "./object-update";
 export * from "./todo";
-export * from "./document";
-export * from "./yjs-update";
+export * from "./object";
+export * from "./object-update";
 
 const syncedViewName = (tableName: string, synced: boolean) =>
   synced ? tableName : `inactive_synced_${tableName}`;
@@ -23,23 +23,23 @@ export const makeSchema = (synced: boolean) =>
       localOnly: true,
       viewName: localViewName(TODO_TABLE_DEF.name, synced),
     }),
-    document: new Table(DOCUMENT_TABLE_DEF.columns, {
-      ...DOCUMENT_TABLE_DEF.options,
-      viewName: syncedViewName(DOCUMENT_TABLE_DEF.name, synced),
+    object: new Table(OBJECT_TABLE_DEF.columns, {
+      ...OBJECT_TABLE_DEF.options,
+      viewName: syncedViewName(OBJECT_TABLE_DEF.name, synced),
     }),
-    local_document: new Table(DOCUMENT_TABLE_DEF.columns, {
-      ...DOCUMENT_TABLE_DEF.options,
+    local_object: new Table(OBJECT_TABLE_DEF.columns, {
+      ...OBJECT_TABLE_DEF.options,
       localOnly: true,
-      viewName: localViewName(DOCUMENT_TABLE_DEF.name, synced),
+      viewName: localViewName(OBJECT_TABLE_DEF.name, synced),
     }),
-    yjs_update: new Table(YJS_UPDATE_TABLE_DEF.columns, {
-      ...YJS_UPDATE_TABLE_DEF.options,
-      viewName: syncedViewName(YJS_UPDATE_TABLE_DEF.name, synced),
+    object_update: new Table(OBJECT_UPDATE_TABLE_DEF.columns, {
+      ...OBJECT_UPDATE_TABLE_DEF.options,
+      viewName: syncedViewName(OBJECT_UPDATE_TABLE_DEF.name, synced),
     }),
-    local_yjs_update: new Table(YJS_UPDATE_TABLE_DEF.columns, {
-      ...YJS_UPDATE_TABLE_DEF.options,
+    local_object_update: new Table(OBJECT_UPDATE_TABLE_DEF.columns, {
+      ...OBJECT_UPDATE_TABLE_DEF.options,
       localOnly: true,
-      viewName: localViewName(YJS_UPDATE_TABLE_DEF.name, synced),
+      viewName: localViewName(OBJECT_UPDATE_TABLE_DEF.name, synced),
     }),
   });
 

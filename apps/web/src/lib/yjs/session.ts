@@ -6,8 +6,8 @@ import { YjsProvider } from "./provider";
 type LoadedCallback = () => void;
 
 export type YjsTarget = {
-  entityType: string;
-  entityId: string;
+  objectId: string;
+  ownerId: string;
 };
 
 type YjsSession = {
@@ -22,7 +22,7 @@ type YjsSession = {
 const SESSION_CACHE = new Map<string, YjsSession>();
 const CLEANUP_DELAY_MS = 60_000;
 
-const getSessionKey = (target: YjsTarget) => `${target.entityType}:${target.entityId}`;
+const getSessionKey = (target: YjsTarget) => target.objectId;
 
 const createSession = (): YjsSession => ({
   ydoc: new Y.Doc(),
@@ -60,8 +60,8 @@ const ensureProvider = (session: YjsSession, db: AbstractPowerSyncDatabase, targ
   session.provider?.destroy();
   session.loaded = false;
   session.provider = new YjsProvider(session.ydoc, db, {
-    entityType: target.entityType,
-    entityId: target.entityId,
+    objectId: target.objectId,
+    ownerId: target.ownerId,
     onLoaded: () => runLoadedCallbacks(session),
   });
 };
@@ -120,7 +120,7 @@ export const gcYjsUpdates = async (target: YjsTarget) => {
   const session = SESSION_CACHE.get(getSessionKey(target));
   if (!session?.provider) {
     return {
-      success: `0 yjs_update rows compacted for ${target.entityType}=${target.entityId}`,
+      success: `0 object_update rows compacted for ${target.objectId}`,
     };
   }
   return session.provider.gcLocalUpdates();

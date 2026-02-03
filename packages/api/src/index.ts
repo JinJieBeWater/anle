@@ -18,3 +18,6 @@ const requireAuth = o.middleware(async ({ context, next }) => {
 });
 
 export const protectedProcedure = publicProcedure.use(requireAuth);
+
+export type ProtectedHandlerInput = Parameters<Parameters<typeof protectedProcedure.handler>[0]>[0];
+export type ProtectedContext = ProtectedHandlerInput["context"];

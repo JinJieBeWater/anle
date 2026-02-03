@@ -3,9 +3,9 @@ import { useCallback, useMemo } from "react";
 import type { YjsTarget } from "@/lib/yjs/session";
 import { flushYjsSnapshot, gcYjsUpdates } from "../lib/yjs/session";
 
-export const useYjsTools = (entityId: string, entityType: string) => {
-  const target = useMemo<YjsTarget>(() => ({ entityId, entityType }), [entityId, entityType]);
-  const documentId = useMemo(() => entityId, [entityId]);
+export const useYjsTools = (objectId: string, ownerId: string) => {
+  const target = useMemo<YjsTarget>(() => ({ objectId, ownerId }), [objectId, ownerId]);
+  const documentId = useMemo(() => objectId, [objectId]);
 
   const flushSnapshot = useCallback(
     (stateVector?: Uint8Array) => flushYjsSnapshot(target, stateVector),
@@ -14,5 +14,5 @@ export const useYjsTools = (entityId: string, entityType: string) => {
 
   const gcUpdates = useCallback(() => gcYjsUpdates(target), [target]);
 
-  return { target, documentId, entityType, entityId, flushSnapshot, gcUpdates };
+  return { target, documentId, objectId, ownerId, flushSnapshot, gcUpdates };
 };

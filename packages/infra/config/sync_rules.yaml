@@ -4,9 +4,11 @@ bucket_definitions:
     parameters: SELECT request.user_id() as user_id
     data: # Data Query, selecting data
       - SELECT * FROM todo WHERE owner_id = bucket.user_id
-  documents:
+  objects:
+    parameters: SELECT request.user_id() as user_id
     data:
-      - SELECT * FROM document
-  yjs_updates:
+      - SELECT * FROM object WHERE owner_id = bucket.user_id
+  object_updates:
+    parameters: SELECT request.user_id() as user_id
     data:
-      - SELECT id, entity_type, entity_id, base64(update_data) as update_data, created_at FROM yjs_update
+      - SELECT id, owner_id, object_id, base64(update_data) as update_data, created_at FROM object_update WHERE owner_id = bucket.user_id

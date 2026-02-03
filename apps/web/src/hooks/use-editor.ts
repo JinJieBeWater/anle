@@ -14,6 +14,7 @@ import {
 
 import { useYjsSession } from "@/hooks/use-yjs-session";
 import { ImeUpdateOptimizer } from "@/components/editor/extensions/ime-update-optimizer";
+import { useAppSession } from "@/hooks/use-app-session";
 
 export const DEFAULT_CHARACTER_LIMIT = 30_000;
 export const DEFAULT_PLACEHOLDER = "Start writing your note...";
@@ -36,7 +37,8 @@ export type EditorOptions = {
 };
 
 export function useEditor(documentId: string, options: EditorOptions = {}) {
-  const session = useYjsSession(documentId, "document");
+  const { userId } = useAppSession();
+  const session = useYjsSession(documentId, userId);
   const { ydoc, flushSnapshot, gcUpdates } = session;
   const characterLimit = options.characterLimit ?? DEFAULT_CHARACTER_LIMIT;
   const placeholder = options.placeholder ?? DEFAULT_PLACEHOLDER;

@@ -2,14 +2,14 @@ import { UpdateType, type CrudEntry } from "@powersync/web";
 
 import { shouldNeverHappen } from "@/utils/should-never-happen";
 import { todoHandler } from "./todo";
-import { documentHandler } from "./document";
+import { objectHandler } from "./object";
 import type { TableHandler, UploadContext } from "./types";
-import { yjsUpdateHandler } from "./yjs-update";
+import { objectUpdateHandler } from "./object-update";
 
 const handlers = {
   todo: todoHandler,
-  document: documentHandler,
-  yjs_update: yjsUpdateHandler,
+  object: objectHandler,
+  object_update: objectUpdateHandler,
 } satisfies Record<string, TableHandler<any, any>>;
 
 const handleTableOp = async <TPut, TPatch>(

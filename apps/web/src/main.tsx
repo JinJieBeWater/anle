@@ -7,12 +7,13 @@ import { routeTree } from "./routeTree.gen";
 import { orpc, queryClient } from "./utils/orpc";
 import { db } from "./lib/powersync/db";
 import { connector } from "./lib/powersync/connector";
+import { getAppSession } from "./hooks/use-app-session";
 
 const router = createRouter({
   routeTree,
   defaultPreload: "intent",
   defaultPendingComponent: () => <Loader />,
-  context: { orpc, queryClient, db, connector },
+  context: { orpc, queryClient, db, connector, getAppSession },
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   },

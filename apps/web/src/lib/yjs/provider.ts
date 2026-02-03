@@ -4,7 +4,7 @@ import { b64ToUint8Array, Uint8ArrayTob64 } from "./binary";
 import { AbstractPowerSyncDatabase } from "@powersync/web";
 import { ObservableV2 } from "lib0/observable";
 import { isComposing } from "@/components/editor/extensions/ime-update-optimizer";
-import type { YjsUpdate } from "@/lib/powersync/schema";
+import type { ObjectUpdate } from "@/lib/powersync/schema";
 
 export interface PowerSyncYjsEvents {
   /**
@@ -16,8 +16,8 @@ export interface PowerSyncYjsEvents {
 }
 
 export type YjsProviderOptions = {
-  entityType: string;
-  entityId: string;
+  objectId: string;
+  ownerId: string;
   onLoaded?: () => void;
   /**
    * Throttle window in milliseconds for persisting updates.
@@ -29,7 +29,7 @@ export type YjsProviderOptions = {
 /**
  * Configure bidirectional sync for a Yjs document with a PowerSync database.
  *
- * Updates are stored in the `yjs_update` table in the database.
+ * Updates are stored in the `object_update` table in the database.
  *
  * @param ydoc
  * @param db
@@ -52,20 +52,20 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
     this.destroy = this.destroy.bind(this);
     this.flushPendingUpdates = this.flushPendingUpdates.bind(this);
     this.throttleMs = this.options.throttleMs ?? 300;
-    this.documentId = this.options.entityId;
+    this.documentId = this.options.objectId;
 
     let synced = false;
     // oxlint-disable-next-line typescript/no-this-alias
     const origin = this;
 
     /**
-     * Watch for changes to the `yjs_update` table for this entity.
+     * Watch for changes to the `object_update` table for this object.
      * This will be used to apply updates from other editors.
      * When we received an added item we apply the update to the Yjs document.
      */
     const updateQuery = db
       .query<
-        Omit<YjsUpdate, "update_data"> & {
+        Omit<ObjectUpdate, "update_data"> & {
           update_data: string;
         }
       >({
@@ -73,12 +73,11 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
           SELECT
             *
           FROM
-            yjs_update
+            object_update
           WHERE
-            entity_type = ?
-            AND entity_id = ?
+            object_id = ?
         `,
-        parameters: [this.options.entityType, this.options.entityId],
+        parameters: [this.options.objectId],
       })
       .differentialWatch();
 
@@ -91,11 +90,11 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
       onDiff: async (diff) => {
         for (const added of diff.added) {
           /**
-           * Local entity updates get stored to the database and synced.
+           * Local object updates get stored to the database and synced.
            *
            * These updates here originate from syncing remote updates.
            * Applying these updates to YJS should not result in the `_storeUpdate`
-           * handler creating a new `yjs_update` record since we mark the `origin`
+           * handler creating a new `object_update` record since we mark the `origin`
            * here and check the `origin` in `_storeUpdate`.
            */
           Y.applyUpdateV2(doc, b64ToUint8Array(added.update_data), origin);
@@ -142,14 +141,14 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
     await this.db.execute(
       /* sql */ `
         INSERT INTO
-          yjs_update (id, entity_type, entity_id, created_at, update_data)
+          object_update (id, owner_id, object_id, created_at, update_data)
         VALUES
           (?, ?, ?, ?, ?)
       `,
       [
         crypto.randomUUID(),
-        this.options.entityType,
-        this.options.entityId,
+        this.options.ownerId,
+        this.options.objectId,
         new Date().toISOString(),
         Uint8ArrayTob64(update),
       ],
@@ -188,19 +187,18 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
   }
 
   /**
-   * Delete data associated with this entity from the database.
+   * Delete data associated with this object from the database.
    *
    * Also call `destroy()` to remove any event listeners and prevent future updates to the database.
    */
   async deleteData() {
     await this.db.execute(
       /* sql */ `
-        DELETE FROM yjs_update
+        DELETE FROM object_update
         WHERE
-          entity_type = ?
-          AND entity_id = ?
+          object_id = ?
       `,
-      [this.options.entityType, this.options.entityId],
+      [this.options.objectId],
     );
   }
 
@@ -215,19 +213,18 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
             update_data,
             created_at
           FROM
-            yjs_update
+            object_update
           WHERE
-            entity_type = ?
-            AND entity_id = ?
+            object_id = ?
           ORDER BY
             created_at ASC
         `,
-        [this.options.entityType, this.options.entityId],
+        [this.options.objectId],
       );
 
       if (updates.length <= 1) {
         return {
-          success: `0 yjs_update rows compacted for ${this.options.entityType}=${this.options.entityId}`,
+          success: `0 object_update rows compacted for ${this.options.objectId}`,
         };
       }
 
@@ -245,27 +242,27 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
       for (let i = 0; i < updateIds.length; i += chunkSize) {
         const chunk = updateIds.slice(i, i + chunkSize);
         const placeholders = chunk.map(() => "?").join(", ");
-        await tx.execute(`DELETE FROM yjs_update WHERE id IN (${placeholders})`, chunk);
+        await tx.execute(`DELETE FROM object_update WHERE id IN (${placeholders})`, chunk);
       }
 
       await tx.execute(
         /* sql */ `
           INSERT INTO
-            yjs_update (id, entity_type, entity_id, created_at, update_data)
+            object_update (id, owner_id, object_id, created_at, update_data)
           VALUES
             (?, ?, ?, ?, ?)
         `,
         [
           crypto.randomUUID(),
-          this.options.entityType,
-          this.options.entityId,
+          this.options.ownerId,
+          this.options.objectId,
           latestCreatedAt,
           compactUpdate,
         ],
       );
 
       return {
-        success: `${updates.length} yjs_update rows compacted for ${this.options.entityType}=${this.options.entityId}`,
+        success: `${updates.length} object_update rows compacted for ${this.options.objectId}`,
       };
     });
   }

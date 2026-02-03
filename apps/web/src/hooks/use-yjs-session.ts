@@ -4,10 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useYjsTools } from "./use-yjs-tools";
 import { acquireYjsSession, getCachedYDoc, releaseYjsSession } from "../lib/yjs/session";
 
-export const useYjsSession = (entityId: string, entityType: string) => {
+export const useYjsSession = (objectId: string, ownerId: string) => {
   const powerSync = usePowerSync();
   const [isLoaded, setIsLoaded] = useState(false);
-  const { target, documentId, flushSnapshot, gcUpdates } = useYjsTools(entityId, entityType);
+  const { target, documentId, flushSnapshot, gcUpdates } = useYjsTools(objectId, ownerId);
 
   const ydoc = useMemo(() => getCachedYDoc(target), [target]);
 
@@ -24,5 +24,5 @@ export const useYjsSession = (entityId: string, entityType: string) => {
     };
   }, [handleLoaded, powerSync, target]);
 
-  return { ydoc, isLoaded, documentId, entityType, entityId, flushSnapshot, gcUpdates };
+  return { ydoc, isLoaded, documentId, objectId, ownerId, flushSnapshot, gcUpdates };
 };

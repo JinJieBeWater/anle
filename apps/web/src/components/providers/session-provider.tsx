@@ -5,7 +5,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import type { AnleSession } from "@/lib/powersync/types";
 import { GetSessionQueryOptions } from "@/utils/orpc";
 
-const SESSION_STORAGE_KEY = "auth.session";
+export const SESSION_STORAGE_KEY = "auth.session";
 
 type SessionContextValue = {
   session: AnleSession | null;

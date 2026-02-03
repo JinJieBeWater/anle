@@ -2,8 +2,8 @@ import type { RouterClient } from "@orpc/server";
 
 import { protectedProcedure, publicProcedure } from "../index";
 import { todoRouter } from "./todo";
-import { documentRouter } from "./document";
-import { yjsUpdateRouter } from "./yjs-update";
+import { objectRouter } from "./object";
+import { objectUpdateRouter } from "./object-update";
 
 export const appRouter = {
   healthCheck: publicProcedure.handler(() => {
@@ -16,8 +16,8 @@ export const appRouter = {
     };
   }),
   todo: todoRouter,
-  document: documentRouter,
-  yjsUpdate: yjsUpdateRouter,
+  object: objectRouter,
+  objectUpdate: objectUpdateRouter,
 };
 export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;
