@@ -4,14 +4,7 @@ import type { AnleSession } from "@/lib/powersync/types";
 
 export const LOCAL_OWNER_ID = "000000000000000000000";
 
-type AppSessionState = {
-  session: AnleSession | null;
-  userId: string;
-  isAuthenticated: boolean;
-  isLocalMode: boolean;
-};
-
-export const useAppSession = (): AppSessionState => {
+export const useAppSession = () => {
   const sessionState = useSession();
   const session = sessionState.session;
 
@@ -22,7 +15,7 @@ export const useAppSession = (): AppSessionState => {
       userId: session.user.id,
       isAuthenticated: true,
       isLocalMode: false,
-    };
+    } as const;
   }
 
   return {
@@ -31,10 +24,10 @@ export const useAppSession = (): AppSessionState => {
     userId: LOCAL_OWNER_ID,
     isAuthenticated: false,
     isLocalMode: true,
-  };
+  } as const;
 };
 
-export const getAppSession = (): AppSessionState => {
+export const getAppSession = () => {
   const cachedSession = localStorageValue<AnleSession | null>(SESSION_STORAGE_KEY, null).get();
   if (cachedSession) {
     return {
@@ -42,12 +35,12 @@ export const getAppSession = (): AppSessionState => {
       userId: cachedSession.user.id,
       isAuthenticated: true,
       isLocalMode: false,
-    };
+    } as const;
   }
   return {
     session: null,
     userId: LOCAL_OWNER_ID,
     isAuthenticated: false,
     isLocalMode: true,
-  };
+  } as const;
 };

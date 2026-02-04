@@ -5,10 +5,12 @@ import { todoHandler } from "./todo";
 import { objectHandler } from "./object";
 import type { TableHandler, UploadContext } from "./types";
 import { objectUpdateHandler } from "./object-update";
+import { objectTemplateHandler } from "./object-template";
 
 const handlers = {
   todo: todoHandler,
   object: objectHandler,
+  object_template: objectTemplateHandler,
   object_update: objectUpdateHandler,
 } satisfies Record<string, TableHandler<any, any>>;
 

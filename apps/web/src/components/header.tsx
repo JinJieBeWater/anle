@@ -1,39 +1,58 @@
-import { Link } from "@tanstack/react-router";
-import { FileText, Home, LayoutDashboard, ListTodo } from "lucide-react";
-
 import { ModeToggle } from "./mode-toggle";
 import SyncStatusMenu from "./sync-status-menu";
 import UserMenu from "./user-menu";
+import type { ComponentProps } from "react";
+import { cn } from "@/lib/utils";
+import { Home } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Button } from "./ui/button";
 
-export default function Header() {
-  const links = [
-    { to: "/", label: "Home", icon: Home, params: {} },
-    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, params: {} },
-    { to: "/tanstack-db-todos", label: "Todos", icon: ListTodo, params: {} },
-    {
-      to: "/crdt/$documentId",
-      label: "CRDT",
-      icon: FileText,
-      params: { documentId: "029e0c45-53b0-4ec2-9179-5611f66e2eed" },
-    },
+export default function Header({ className, ...props }: ComponentProps<"div">) {
+  const links: {
+    to: string;
+    label?: string;
+    icon: React.ForwardRefExoticComponent<React.SVGProps<SVGSVGElement>>;
+    params: Record<string, string>;
+  }[] = [
+    { to: "/", icon: Home, params: {} },
+    // { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, params: {} },
+    // { to: "/tanstack-db-todos", label: "Todos", icon: ListTodo, params: {} },
+    // {
+    //   to: "/crdt/$documentId",
+    //   label: "CRDT",
+    //   icon: FileText,
+    //   params: { documentId: "029e0c45-53b0-4ec2-9179-5611f66e2eed" },
+    // },
   ];
-
   return (
-    <div>
-      <div className="flex flex-row items-center justify-between px-2 py-1">
+    <div
+      className={cn(
+        "sticky top-0 z-50 flex w-full items-center bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60",
+        className,
+      )}
+      {...props}
+    >
+      <div className="flex h-(--header-height) w-full items-center gap-2 px-4 justify-between">
         <nav className="flex gap-4 text-lg">
           {links.map(({ to, label, icon: Icon, params }) => {
             return (
-              <Link
+              <Button
+                variant={"ghost"}
+                size={label ? "default" : "icon"}
                 key={to}
-                to={to}
-                params={params}
-                className="flex items-center gap-2"
-                aria-label={label}
+                nativeButton={false}
+                render={
+                  <Link
+                    to={to}
+                    params={params}
+                    className="flex items-center gap-2"
+                    aria-label={label}
+                  />
+                }
               >
                 <Icon className="size-4" aria-hidden="true" />
-                <span className="hidden sm:inline">{label}</span>
-              </Link>
+                {label && <span className="hidden sm:inline">{label}</span>}
+              </Button>
             );
           })}
         </nav>
@@ -43,7 +62,6 @@ export default function Header() {
           <UserMenu />
         </div>
       </div>
-      <hr />
     </div>
   );
 }

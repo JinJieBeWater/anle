@@ -8,6 +8,10 @@ bucket_definitions:
     parameters: SELECT request.user_id() as user_id
     data:
       - SELECT * FROM object WHERE owner_id = bucket.user_id
+  object_templates:
+    parameters: SELECT request.user_id() as user_id
+    data:
+      - SELECT * FROM object_template WHERE owner_id = bucket.user_id
   object_updates:
     parameters: SELECT request.user_id() as user_id
     data:

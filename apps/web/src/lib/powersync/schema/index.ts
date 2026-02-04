@@ -2,9 +2,11 @@ import { Schema, Table } from "@powersync/web";
 import { TODO_TABLE_DEF } from "./todo";
 import { OBJECT_TABLE_DEF } from "./object";
 import { OBJECT_UPDATE_TABLE_DEF } from "./object-update";
+import { OBJECT_TEMPLATE_TABLE_DEF } from "./object-template";
 export * from "./todo";
 export * from "./object";
 export * from "./object-update";
+export * from "./object-template";
 
 const syncedViewName = (tableName: string, synced: boolean) =>
   synced ? tableName : `inactive_synced_${tableName}`;
@@ -31,6 +33,15 @@ export const makeSchema = (synced: boolean) =>
       ...OBJECT_TABLE_DEF.options,
       localOnly: true,
       viewName: localViewName(OBJECT_TABLE_DEF.name, synced),
+    }),
+    object_template: new Table(OBJECT_TEMPLATE_TABLE_DEF.columns, {
+      ...OBJECT_TEMPLATE_TABLE_DEF.options,
+      viewName: syncedViewName(OBJECT_TEMPLATE_TABLE_DEF.name, synced),
+    }),
+    local_object_template: new Table(OBJECT_TEMPLATE_TABLE_DEF.columns, {
+      ...OBJECT_TEMPLATE_TABLE_DEF.options,
+      localOnly: true,
+      viewName: localViewName(OBJECT_TEMPLATE_TABLE_DEF.name, synced),
     }),
     object_update: new Table(OBJECT_UPDATE_TABLE_DEF.columns, {
       ...OBJECT_UPDATE_TABLE_DEF.options,

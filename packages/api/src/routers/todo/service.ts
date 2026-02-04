@@ -7,16 +7,20 @@ export const todoService = {
   getTodos: async () => {
     return await db.select().from(todo);
   },
-  createTodo: async (input: TodoInput.Create) => {
-    return await db.insert(todo).values(input).onConflictDoUpdate({
-      target: todo.id,
-      set: input,
-    });
+  create: async (input: TodoInput.Create) => {
+    return await db
+      .insert(todo)
+      .values(input)
+      .onConflictDoUpdate({
+        target: todo.id,
+        set: input,
+        setWhere: eq(todo.owner_id, input.owner_id),
+      });
   },
-  toggleTodo: async (input: TodoInput.Toggle) => {
+  toggle: async (input: TodoInput.Toggle) => {
     return await db.update(todo).set(input).where(eq(todo.id, input.id));
   },
-  deleteTodo: async (input: TodoInput.Delete) => {
+  delete: async (input: TodoInput.Delete) => {
     return await db.delete(todo).where(eq(todo.id, input.id));
   },
 };

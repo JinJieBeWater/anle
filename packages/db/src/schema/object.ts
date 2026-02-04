@@ -1,30 +1,8 @@
 import { relations } from "drizzle-orm";
 import { index, jsonb, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+
+import { objectTemplate } from "./object-template";
 import { user } from "./auth";
-
-export const KNOWN_OBJECT_DOMAINS = ["template", "journal", "note", "blog", "novel"] as const;
-export type KnownObjectDomain = (typeof KNOWN_OBJECT_DOMAINS)[number];
-export type ObjectDomain = KnownObjectDomain | (string & {});
-
-export const KNOWN_OBJECT_TYPES = [
-  "template_template",
-  "template_field",
-  "template_section",
-  "template_option",
-  "journal_entry",
-  "note_folder",
-  "note_entry",
-  "blog_folder",
-  "blog_post",
-  "novel_series",
-  "novel_book",
-  "novel_chapter",
-  "novel_codex",
-  "novel_codex_item",
-  "novel_codex_character",
-] as const;
-export type KnownObjectType = (typeof KNOWN_OBJECT_TYPES)[number];
-export type ObjectType = KnownObjectType | (string & {});
 
 export const object = pgTable(
   "object",
@@ -33,20 +11,29 @@ export const object = pgTable(
     owner_id: text("owner_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    domain: text("domain").$type<ObjectDomain>().notNull(),
-    type: text("type").$type<ObjectType>().notNull(),
+    template_id: uuid("template_id")
+      .notNull()
+      .references(() => objectTemplate.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
     name: varchar("name", { length: 255 }),
     metadata: jsonb("metadata"),
     updated_at: timestamp("updated_at", { withTimezone: true }).notNull(),
     created_at: timestamp("created_at", { withTimezone: true }).notNull(),
   },
-  (table) => [index("object_owner_domain_type_idx").on(table.owner_id, table.domain, table.type)],
+  (table) => [
+    index("object_owner_type_idx").on(table.owner_id, table.type),
+    index("object_template_idx").on(table.template_id),
+  ],
 );
 
 export const objectRelations = relations(object, ({ one }) => ({
   owner: one(user, {
     fields: [object.owner_id],
     references: [user.id],
+  }),
+  template: one(objectTemplate, {
+    fields: [object.template_id],
+    references: [objectTemplate.id],
   }),
 }));
 

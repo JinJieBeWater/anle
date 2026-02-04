@@ -17,5 +17,7 @@ export const numberToString = z.number().transform((val) => val.toString());
 export const stringToJson = z.string().transform((val) => {
   const value1 = JSON.parse(val);
   const value = typeof value1 === "string" ? JSON.parse(value1) : value1;
-  return value;
+  return value as Record<string, any>;
 });
+
+export const nullableStringToJson = z.string().pipe(stringToJson).nullable();

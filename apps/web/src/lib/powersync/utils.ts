@@ -1,5 +1,5 @@
 import type { AbstractPowerSyncDatabase } from "@powersync/web";
-import { objectCollection, todoCollection } from "../collections";
+import { objectCollection, objectTemplateCollection, todoCollection } from "../collections";
 import { SYNCED_SCHEMA, LOCAL_SCHEMA } from "./schema";
 import { setSyncEnabled } from "./sync-mode";
 
@@ -7,6 +7,7 @@ export const switchToSyncedSchema = async (db: AbstractPowerSyncDatabase, userId
   console.log("Switching to synced schema");
   await todoCollection.cleanup();
   await objectCollection.cleanup();
+  await objectTemplateCollection.cleanup();
   await db.updateSchema(SYNCED_SCHEMA);
   setSyncEnabled(db.database.name, true);
 
@@ -18,10 +19,16 @@ export const switchToSyncedSchema = async (db: AbstractPowerSyncDatabase, userId
     await tx.execute("DELETE FROM inactive_local_todo");
 
     await tx.execute(
-      "INSERT INTO object(id, owner_id, domain, type, name, metadata, updated_at, created_at) SELECT id, ?, domain, type, name, metadata, updated_at, created_at FROM inactive_local_object",
+      "INSERT INTO object(id, owner_id, template_id, type, name, metadata, updated_at, created_at) SELECT id, ?, template_id, type, name, metadata, updated_at, created_at FROM inactive_local_object",
       [userId],
     );
     await tx.execute("DELETE FROM inactive_local_object");
+
+    await tx.execute(
+      "INSERT INTO object_template(id, owner_id, name, config, updated_at, created_at) SELECT id, ?, name, config, updated_at, created_at FROM inactive_local_object_template",
+      [userId],
+    );
+    await tx.execute("DELETE FROM inactive_local_object_template");
 
     await tx.execute(
       "INSERT INTO object_update(id, owner_id, object_id, created_at, update_data) SELECT id, ?, object_id, created_at, update_data FROM inactive_local_object_update",
@@ -32,14 +39,18 @@ export const switchToSyncedSchema = async (db: AbstractPowerSyncDatabase, userId
 
   todoCollection.startSyncImmediate();
   objectCollection.startSyncImmediate();
+  objectTemplateCollection.startSyncImmediate();
 };
 
 export const switchToLocalSchema = async (db: AbstractPowerSyncDatabase) => {
   console.log("Switching to local schema");
   await todoCollection.cleanup();
   await objectCollection.cleanup();
+  await objectTemplateCollection.cleanup();
   await db.updateSchema(LOCAL_SCHEMA);
   setSyncEnabled(db.database.name, false);
+
   todoCollection.startSyncImmediate();
   objectCollection.startSyncImmediate();
+  objectTemplateCollection.startSyncImmediate();
 };

@@ -59,7 +59,7 @@ export default function UserMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="outline" />}>
+      <DropdownMenuTrigger render={<Button variant="ghost" />}>
         {session.user.name}
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-card">

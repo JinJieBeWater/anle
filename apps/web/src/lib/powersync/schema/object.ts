@@ -10,7 +10,7 @@ export const OBJECT_TABLE_DEF: TableDefinition = {
   name: "object",
   columns: {
     owner_id: column.text,
-    domain: column.text,
+    template_id: column.text,
     type: column.text,
     name: column.text,
     metadata: column.text,
@@ -20,7 +20,8 @@ export const OBJECT_TABLE_DEF: TableDefinition = {
   options: {
     indexes: {
       by_owner: ["owner_id"],
-      by_owner_domain_type: ["owner_id", "domain", "type"],
+      by_owner_type: ["owner_id", "type"],
+      by_template: ["template_id"],
     },
   },
 };

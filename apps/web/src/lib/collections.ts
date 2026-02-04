@@ -7,6 +7,8 @@ import {
   todoDeserializationSchema,
   objectSchema,
   objectDeserializationSchema,
+  objectTemplateSchema,
+  objectTemplateDeserializationSchema,
 } from "./powersync/schema";
 
 export const todoCollection = createCollection(
@@ -32,6 +34,20 @@ export const objectCollection = createCollection(
     onDeserializationError: (error) => {
       console.error(
         `Could not deserialize object collection: ${error.issues.map((issue) => issue.message).join(", ")}`,
+      );
+    },
+  }),
+);
+
+export const objectTemplateCollection = createCollection(
+  powerSyncCollectionOptions({
+    database: db,
+    table: SYNCED_SCHEMA.props.object_template,
+    schema: objectTemplateSchema,
+    deserializationSchema: objectTemplateDeserializationSchema,
+    onDeserializationError: (error) => {
+      console.error(
+        `Could not deserialize object_template collection: ${error.issues.map((issue) => issue.message).join(", ")}`,
       );
     },
   }),

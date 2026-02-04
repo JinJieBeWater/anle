@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { objectCollection } from "@/lib/collections";
+import { objectCollection, objectTemplateCollection } from "@/lib/collections";
 import { useLiveQuery, eq } from "@tanstack/react-db";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -29,21 +29,101 @@ import { toast } from "sonner";
 import { Editor } from "@/components/editor/editor";
 import { useEditor } from "@/hooks/use-editor";
 import { GuardBySync } from "@/components/guard-by-sync";
+import type { ObjectTemplateConfig } from "@anle/db/schema/object-template";
 
 export const Route = createFileRoute("/crdt/$documentId")({
   component: RouteComponent,
   loader: async ({ params: { documentId }, context: { getAppSession } }) => {
+    const defaultTemplateConfig: ObjectTemplateConfig = {
+      objects: [
+        {
+          type: "entry",
+          label: "Entry",
+          metadataFields: [
+            {
+              key: "content",
+              type: "richText",
+            },
+          ],
+        },
+      ],
+    };
+    const getTemplateType = (config?: typeof defaultTemplateConfig | null) => {
+      const objects = config?.objects ?? [];
+      if (objects.length === 0) {
+        return { type: defaultTemplateConfig.objects[0].type, needsPatch: true };
+      }
+      const primary = objects[0];
+      if (!primary?.type) {
+        return { type: defaultTemplateConfig.objects[0].type, needsPatch: true };
+      }
+      return { type: primary.type, needsPatch: false };
+    };
+    const defaultTemplateName = "CRDT示例";
+    const getTemplateName = (_id: string) => defaultTemplateName;
     const { userId: ownerId } = getAppSession();
     const state = await objectCollection.stateWhenReady();
     const existing = state.get(documentId);
     if (existing) {
+      const templateState = await objectTemplateCollection.stateWhenReady();
+      const templateId = existing.template_id || documentId;
+      const templateExists = templateState.get(templateId);
+      if (!templateExists) {
+        await objectTemplateCollection.insert({
+          id: templateId,
+          owner_id: ownerId,
+          name: getTemplateName(templateId),
+          config: defaultTemplateConfig,
+          created_at: new Date(),
+          updated_at: new Date(),
+        }).isPersisted.promise;
+      } else {
+        const { needsPatch } = getTemplateType(templateExists.config ?? defaultTemplateConfig);
+        const needsNamePatch = !templateExists.name?.trim();
+        if (needsPatch || needsNamePatch) {
+          await objectTemplateCollection.update(templateId, (draft) => {
+            if (needsPatch) {
+              draft.config = defaultTemplateConfig;
+            }
+            if (needsNamePatch) {
+              draft.name = getTemplateName(templateId);
+            }
+            draft.updated_at = new Date();
+          }).isPersisted.promise;
+        }
+      }
+      if (!existing.template_id) {
+        await objectCollection.update(documentId, (draft) => {
+          draft.template_id = templateId;
+          draft.updated_at = new Date();
+        }).isPersisted.promise;
+      }
       return;
     }
+    const templateId = documentId;
+    const templateState = await objectTemplateCollection.stateWhenReady();
+    const templateExists = templateState.get(templateId);
+    if (!templateExists) {
+      await objectTemplateCollection.insert({
+        id: templateId,
+        owner_id: ownerId,
+        name: getTemplateName(templateId),
+        config: defaultTemplateConfig,
+        created_at: new Date(),
+        updated_at: new Date(),
+      }).isPersisted.promise;
+    } else if (!templateExists.name?.trim()) {
+      await objectTemplateCollection.update(templateId, (draft) => {
+        draft.name = getTemplateName(templateId);
+        draft.updated_at = new Date();
+      }).isPersisted.promise;
+    }
+    const { type } = getTemplateType(templateExists?.config ?? defaultTemplateConfig);
     await objectCollection.insert({
       id: documentId,
       owner_id: ownerId,
-      domain: "journal",
-      type: "journal_entry",
+      template_id: templateId,
+      type,
       name: "Untitled entry",
       metadata: JSON.stringify({}),
       created_at: new Date(),

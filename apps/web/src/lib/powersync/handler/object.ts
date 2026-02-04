@@ -15,7 +15,10 @@ const objectPatchSchema = objectSchema.updateBase
     updated_at: stringToDate,
   })
   .omit({ id: true })
-  .refine((value) => Object.keys(value).length > 0, "object patch cannot be empty");
+  .refine(
+    (value) => Object.keys(value).length > 1,
+    "object patch cannot be empty or only contain updated_at",
+  );
 
 export const objectHandler = createHandler({
   putSchema: objectCreateInputSchema,
@@ -30,9 +33,10 @@ export const objectHandler = createHandler({
     });
   },
   patch: async (op, data) => {
+    const { ...rest } = data;
     await orpc.object.update.call({
       id: op.id,
-      ...data,
+      ...rest,
     });
   },
   remove: async (op) => {

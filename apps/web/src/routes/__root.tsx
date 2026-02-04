@@ -55,7 +55,7 @@ function RootComponent() {
         storageKey="vite-ui-theme"
       >
         <SystemProvider>
-          <div className="grid grid-rows-[auto_1fr] h-svh">
+          <div className="grid grid-rows-[auto_1fr] h-svh [--header-height:calc(--spacing(14))]">
             <Header />
             <Outlet />
           </div>

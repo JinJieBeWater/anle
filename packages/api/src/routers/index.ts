@@ -4,6 +4,7 @@ import { protectedProcedure, publicProcedure } from "../index";
 import { todoRouter } from "./todo";
 import { objectRouter } from "./object";
 import { objectUpdateRouter } from "./object-update";
+import { objectTemplateRouter } from "./object-template";
 
 export const appRouter = {
   healthCheck: publicProcedure.handler(() => {
@@ -18,6 +19,7 @@ export const appRouter = {
   todo: todoRouter,
   object: objectRouter,
   objectUpdate: objectUpdateRouter,
+  objectTemplate: objectTemplateRouter,
 };
 export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;

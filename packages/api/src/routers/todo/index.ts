@@ -8,14 +8,14 @@ export const todoRouter = {
   }),
 
   create: publicProcedure.input(todoSchema.create).handler(async ({ input }) => {
-    return await todoService.createTodo(input);
+    return await todoService.create(input);
   }),
 
   toggle: publicProcedure.input(todoSchema.toggle).handler(async ({ input }) => {
-    return await todoService.toggleTodo(input);
+    return await todoService.toggle(input);
   }),
 
   delete: publicProcedure.input(todoSchema.delete).handler(async ({ input }) => {
-    return await todoService.deleteTodo(input);
+    return await todoService.delete(input);
   }),
 };

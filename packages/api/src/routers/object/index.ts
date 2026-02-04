@@ -4,12 +4,12 @@ import { objectService } from "./service";
 
 export const objectRouter = {
   create: protectedProcedure.input(objectSchema.create).handler(async ({ input, context }) => {
-    return await objectService.createObjectForOwner({ input, context });
+    return await objectService.create({ input, context });
   }),
   update: protectedProcedure.input(objectSchema.update).handler(async ({ input, context }) => {
-    return await objectService.updateObjectForOwner({ input, context });
+    return await objectService.update({ input, context });
   }),
   delete: protectedProcedure.input(objectSchema.delete).handler(async ({ input, context }) => {
-    return await objectService.deleteObjectForOwner({ input, context });
+    return await objectService.delete({ input, context });
   }),
 };

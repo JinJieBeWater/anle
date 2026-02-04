@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAppSession } from "@/hooks/use-app-session";
-import { useQuery } from "@powersync/react";
-import { objectDeserializationSchema } from "@/lib/powersync/schema";
 
 export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
@@ -9,16 +7,6 @@ export const Route = createFileRoute("/dashboard")({
 
 function RouteComponent() {
   const { session, userId, isAuthenticated, isLocalMode } = useAppSession();
-
-  const { data: pendingLists, isLoading, isFetching, error } = useQuery("SELECT * FROM object");
-
-  console.log({
-    pendingLists,
-    isLoading,
-    isFetching,
-    error,
-    data: objectDeserializationSchema.array().parse(pendingLists),
-  });
 
   return (
     <div className="mx-auto w-full max-w-3xl py-10 space-y-4">

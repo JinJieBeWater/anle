@@ -53,13 +53,13 @@ export default function SyncStatusMenu() {
   return (
     <DropdownMenu>
       <ButtonGroup>
-        <DropdownMenuTrigger render={<Button variant="outline" size="icon" />}>
+        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
           <WifiIcon
             className={cn("size-4 transition-colors", wifiTone, isConnecting && "animate-pulse")}
           />
           <span className="sr-only">Sync connection status</span>
         </DropdownMenuTrigger>
-        <DropdownMenuTrigger render={<Button variant="outline" size="icon" />}>
+        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
           <span className="flex items-center transition-colors">
             <ArrowUp
               className={cn("translate-x-0.5 size-3.5", isUploading ? "" : "text-muted-foreground")}
