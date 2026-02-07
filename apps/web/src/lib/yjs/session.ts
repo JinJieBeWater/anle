@@ -7,7 +7,7 @@ type LoadedCallback = () => void;
 
 export type YjsTarget = {
   objectId: string;
-  ownerId: string;
+  fieldKey: string;
 };
 
 type YjsSession = {
@@ -22,7 +22,7 @@ type YjsSession = {
 const SESSION_CACHE = new Map<string, YjsSession>();
 const CLEANUP_DELAY_MS = 60_000;
 
-const getSessionKey = (target: YjsTarget) => target.objectId;
+export const buildYjsDocumentId = (target: YjsTarget) => `${target.objectId}:${target.fieldKey}`;
 
 const createSession = (): YjsSession => ({
   ydoc: new Y.Doc(),
@@ -32,7 +32,7 @@ const createSession = (): YjsSession => ({
 });
 
 const getOrCreateSession = (target: YjsTarget): YjsSession => {
-  const key = getSessionKey(target);
+  const key = buildYjsDocumentId(target);
   let session = SESSION_CACHE.get(key);
   if (!session) {
     session = createSession();
@@ -61,7 +61,7 @@ const ensureProvider = (session: YjsSession, db: AbstractPowerSyncDatabase, targ
   session.loaded = false;
   session.provider = new YjsProvider(session.ydoc, db, {
     objectId: target.objectId,
-    ownerId: target.ownerId,
+    fieldKey: target.fieldKey,
     onLoaded: () => runLoadedCallbacks(session),
   });
 };
@@ -90,7 +90,7 @@ export const acquireYjsSession = (
 };
 
 export const releaseYjsSession = (target: YjsTarget, onLoaded?: LoadedCallback) => {
-  const key = getSessionKey(target);
+  const key = buildYjsDocumentId(target);
   const session = SESSION_CACHE.get(key);
   if (!session) return;
 
@@ -111,16 +111,16 @@ export const releaseYjsSession = (target: YjsTarget, onLoaded?: LoadedCallback) 
 };
 
 export const flushYjsSnapshot = async (target: YjsTarget, stateVector?: Uint8Array) => {
-  const session = SESSION_CACHE.get(getSessionKey(target));
+  const session = SESSION_CACHE.get(buildYjsDocumentId(target));
   if (!session?.provider) return;
   await session.provider.storeSnapshot(stateVector);
 };
 
 export const gcYjsUpdates = async (target: YjsTarget) => {
-  const session = SESSION_CACHE.get(getSessionKey(target));
+  const session = SESSION_CACHE.get(buildYjsDocumentId(target));
   if (!session?.provider) {
     return {
-      success: `0 object_update rows compacted for ${target.objectId}`,
+      success: `0 object_update rows compacted for ${target.objectId}:${target.fieldKey}`,
     };
   }
   return session.provider.gcLocalUpdates();

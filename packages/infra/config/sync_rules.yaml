@@ -13,6 +13,23 @@ bucket_definitions:
     data:
       - SELECT * FROM object_template WHERE owner_id = bucket.user_id
   object_updates:
-    parameters: SELECT request.user_id() as user_id
+    parameters: |
+      SELECT id as object_id
+      FROM object
+      WHERE owner_id = request.user_id()
     data:
-      - SELECT id, owner_id, object_id, base64(update_data) as update_data, created_at FROM object_update WHERE owner_id = bucket.user_id
+      - SELECT id, object_id, base64(update_data) as update_data, created_at
+        FROM object_update
+        WHERE object_id = bucket.object_id
+  object_relations:
+    parameters: |
+      SELECT id as object_id
+      FROM object
+      WHERE owner_id = request.user_id()
+    data:
+      - SELECT from_object_id || ':' || to_object_id || ':' || type as id, object_relation.*
+        FROM object_relation
+        WHERE from_object_id = bucket.object_id
+      - SELECT from_object_id || ':' || to_object_id || ':' || type as id, object_relation.*
+        FROM object_relation
+        WHERE to_object_id = bucket.object_id

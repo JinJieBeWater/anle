@@ -31,8 +31,7 @@ export const switchToSyncedSchema = async (db: AbstractPowerSyncDatabase, userId
     await tx.execute("DELETE FROM inactive_local_object_template");
 
     await tx.execute(
-      "INSERT INTO object_update(id, owner_id, object_id, created_at, update_data) SELECT id, ?, object_id, created_at, update_data FROM inactive_local_object_update",
-      [userId],
+      "INSERT INTO object_update(id, object_id, field_key, created_at, update_data) SELECT id, object_id, field_key, created_at, update_data FROM inactive_local_object_update",
     );
     await tx.execute("DELETE FROM inactive_local_object_update");
   });

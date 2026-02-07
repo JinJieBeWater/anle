@@ -1,4 +1,5 @@
 import { useEditor as useTiptapEditor, useEditorState } from "@tiptap/react";
+import { useMemo } from "react";
 import Collaboration from "@tiptap/extension-collaboration";
 import { Document } from "@tiptap/extension-document";
 import { HardBreak } from "@tiptap/extension-hard-break";
@@ -13,8 +14,8 @@ import {
 } from "@tiptap/extensions";
 
 import { useYjsSession } from "@/hooks/use-yjs-session";
+import type { YjsTarget } from "@/lib/yjs/session";
 import { ImeUpdateOptimizer } from "@/components/editor/extensions/ime-update-optimizer";
-import { useAppSession } from "@/hooks/use-app-session";
 
 export const DEFAULT_CHARACTER_LIMIT = 30_000;
 export const DEFAULT_PLACEHOLDER = "Start writing your note...";
@@ -36,10 +37,13 @@ export type EditorOptions = {
   placeholder?: string;
 };
 
-export function useEditor(documentId: string, options: EditorOptions = {}) {
-  const { userId } = useAppSession();
-  const session = useYjsSession(documentId, userId);
-  const { ydoc, flushSnapshot, gcUpdates } = session;
+export function useEditor(target: YjsTarget, options: EditorOptions = {}) {
+  const stableTarget = useMemo(
+    () => ({ objectId: target.objectId, fieldKey: target.fieldKey }),
+    [target.objectId, target.fieldKey],
+  );
+  const session = useYjsSession(stableTarget);
+  const { ydoc, documentId, flushSnapshot, gcUpdates } = session;
   const characterLimit = options.characterLimit ?? DEFAULT_CHARACTER_LIMIT;
   const placeholder = options.placeholder ?? DEFAULT_PLACEHOLDER;
 

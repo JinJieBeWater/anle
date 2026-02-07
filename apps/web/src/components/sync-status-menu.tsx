@@ -36,14 +36,10 @@ export default function SyncStatusMenu() {
   const isUploading = Boolean(status.dataFlowStatus?.uploading);
   const isDownloading = Boolean(status.dataFlowStatus?.downloading);
   const isOnline = isConnected || isConnecting;
-  const wifiTone = isOnline ? "" : "text-muted-foreground";
   const WifiIcon = isOnline ? Wifi : WifiOff;
   const flowLabel = getFlowLabel(isUploading, isDownloading);
 
   const handleConnect = () => {
-    if (!connector) {
-      return;
-    }
     powerSync.connect(connector);
   };
   const handleDisconnect = () => {
@@ -55,7 +51,11 @@ export default function SyncStatusMenu() {
       <ButtonGroup>
         <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
           <WifiIcon
-            className={cn("size-4 transition-colors", wifiTone, isConnecting && "animate-pulse")}
+            className={cn(
+              "size-4 transition-colors",
+              isOnline ? "" : "text-muted-foreground",
+              isConnecting && "animate-pulse",
+            )}
           />
           <span className="sr-only">Sync connection status</span>
         </DropdownMenuTrigger>

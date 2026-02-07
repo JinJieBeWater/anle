@@ -23,14 +23,14 @@ export const OBJECT_TEMPLATE_TABLE_DEF: TableDefinition = {
 };
 
 export const objectTemplateSchema = createSelectSchema(objectTemplate, {
-  config: objectTemplateConfigSchema.nullable(),
+  config: objectTemplateConfigSchema.nullish(),
 });
 
 export const objectTemplateDeserializationSchema = z.object({
   ...objectTemplateSchema.shape,
   updated_at: stringToDate,
   created_at: stringToDate,
-  config: nullableStringToJson.pipe(objectTemplateConfigSchema.nullable()),
+  config: nullableStringToJson.pipe(objectTemplateConfigSchema.nullish()),
 });
 
 export type ObjectTemplate = z.output<typeof objectTemplateSchema>;

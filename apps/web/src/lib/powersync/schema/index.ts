@@ -2,10 +2,12 @@ import { Schema, Table } from "@powersync/web";
 import { TODO_TABLE_DEF } from "./todo";
 import { OBJECT_TABLE_DEF } from "./object";
 import { OBJECT_UPDATE_TABLE_DEF } from "./object-update";
+import { OBJECT_RELATION_TABLE_DEF } from "./object-relation";
 import { OBJECT_TEMPLATE_TABLE_DEF } from "./object-template";
 export * from "./todo";
 export * from "./object";
 export * from "./object-update";
+export * from "./object-relation";
 export * from "./object-template";
 
 const syncedViewName = (tableName: string, synced: boolean) =>
@@ -47,10 +49,19 @@ export const makeSchema = (synced: boolean) =>
       ...OBJECT_UPDATE_TABLE_DEF.options,
       viewName: syncedViewName(OBJECT_UPDATE_TABLE_DEF.name, synced),
     }),
+    object_relation: new Table(OBJECT_RELATION_TABLE_DEF.columns, {
+      ...OBJECT_RELATION_TABLE_DEF.options,
+      viewName: syncedViewName(OBJECT_RELATION_TABLE_DEF.name, synced),
+    }),
     local_object_update: new Table(OBJECT_UPDATE_TABLE_DEF.columns, {
       ...OBJECT_UPDATE_TABLE_DEF.options,
       localOnly: true,
       viewName: localViewName(OBJECT_UPDATE_TABLE_DEF.name, synced),
+    }),
+    local_object_relation: new Table(OBJECT_RELATION_TABLE_DEF.columns, {
+      ...OBJECT_RELATION_TABLE_DEF.options,
+      localOnly: true,
+      viewName: localViewName(OBJECT_RELATION_TABLE_DEF.name, synced),
     }),
   });
 

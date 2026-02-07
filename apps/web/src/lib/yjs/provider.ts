@@ -5,6 +5,7 @@ import { AbstractPowerSyncDatabase } from "@powersync/web";
 import { ObservableV2 } from "lib0/observable";
 import { isComposing } from "@/components/editor/extensions/ime-update-optimizer";
 import type { ObjectUpdate } from "@/lib/powersync/schema";
+import { buildYjsDocumentId } from "./session";
 
 export interface PowerSyncYjsEvents {
   /**
@@ -17,7 +18,7 @@ export interface PowerSyncYjsEvents {
 
 export type YjsProviderOptions = {
   objectId: string;
-  ownerId: string;
+  fieldKey: string;
   onLoaded?: () => void;
   /**
    * Throttle window in milliseconds for persisting updates.
@@ -52,7 +53,10 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
     this.destroy = this.destroy.bind(this);
     this.flushPendingUpdates = this.flushPendingUpdates.bind(this);
     this.throttleMs = this.options.throttleMs ?? 300;
-    this.documentId = this.options.objectId;
+    this.documentId = buildYjsDocumentId({
+      objectId: this.options.objectId,
+      fieldKey: this.options.fieldKey,
+    });
 
     let synced = false;
     // oxlint-disable-next-line typescript/no-this-alias
@@ -76,8 +80,9 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
             object_update
           WHERE
             object_id = ?
+            AND field_key = ?
         `,
-        parameters: [this.options.objectId],
+        parameters: [this.options.objectId, this.options.fieldKey],
       })
       .differentialWatch();
 
@@ -141,14 +146,14 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
     await this.db.execute(
       /* sql */ `
         INSERT INTO
-          object_update (id, owner_id, object_id, created_at, update_data)
+          object_update (id, object_id, field_key, created_at, update_data)
         VALUES
           (?, ?, ?, ?, ?)
       `,
       [
         crypto.randomUUID(),
-        this.options.ownerId,
         this.options.objectId,
+        this.options.fieldKey,
         new Date().toISOString(),
         Uint8ArrayTob64(update),
       ],
@@ -197,8 +202,9 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
         DELETE FROM object_update
         WHERE
           object_id = ?
+          AND field_key = ?
       `,
-      [this.options.objectId],
+      [this.options.objectId, this.options.fieldKey],
     );
   }
 
@@ -216,15 +222,16 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
             object_update
           WHERE
             object_id = ?
+            AND field_key = ?
           ORDER BY
             created_at ASC
         `,
-        [this.options.objectId],
+        [this.options.objectId, this.options.fieldKey],
       );
 
       if (updates.length <= 1) {
         return {
-          success: `0 object_update rows compacted for ${this.options.objectId}`,
+          success: `0 object_update rows compacted for ${this.options.objectId}:${this.options.fieldKey}`,
         };
       }
 
@@ -248,21 +255,21 @@ export class YjsProvider extends ObservableV2<PowerSyncYjsEvents> {
       await tx.execute(
         /* sql */ `
           INSERT INTO
-            object_update (id, owner_id, object_id, created_at, update_data)
+            object_update (id, object_id, field_key, created_at, update_data)
           VALUES
             (?, ?, ?, ?, ?)
         `,
         [
           crypto.randomUUID(),
-          this.options.ownerId,
           this.options.objectId,
+          this.options.fieldKey,
           latestCreatedAt,
           compactUpdate,
         ],
       );
 
       return {
-        success: `${updates.length} object_update rows compacted for ${this.options.objectId}`,
+        success: `${updates.length} object_update rows compacted for ${this.options.objectId}:${this.options.fieldKey}`,
       };
     });
   }

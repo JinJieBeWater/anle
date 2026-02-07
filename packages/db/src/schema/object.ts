@@ -1,8 +1,21 @@
-import { relations } from "drizzle-orm";
-import { index, jsonb, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+import {
+  index,
+  jsonb,
+  pgEnum,
+  pgPolicy,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 import { objectTemplate } from "./object-template";
 import { user } from "./auth";
+
+type KnownType = "novel" | "volume" | "chapter";
 
 export const object = pgTable(
   "object",
@@ -14,8 +27,8 @@ export const object = pgTable(
     template_id: uuid("template_id")
       .notNull()
       .references(() => objectTemplate.id, { onDelete: "cascade" }),
-    type: text("type").notNull(),
-    name: varchar("name", { length: 255 }),
+    type: text("type").notNull().$type<KnownType>(),
+    name: varchar("name", { length: 255 }).notNull(),
     metadata: jsonb("metadata"),
     updated_at: timestamp("updated_at", { withTimezone: true }).notNull(),
     created_at: timestamp("created_at", { withTimezone: true }).notNull(),
@@ -23,8 +36,14 @@ export const object = pgTable(
   (table) => [
     index("object_owner_type_idx").on(table.owner_id, table.type),
     index("object_template_idx").on(table.template_id),
+    pgPolicy("object_owner", {
+      for: "all",
+      to: "public",
+      using: sql`${table.owner_id} = current_setting('app.user_id', true)`,
+      withCheck: sql`${table.owner_id} = current_setting('app.user_id', true)`,
+    }),
   ],
-);
+).enableRLS();
 
 export const objectRelations = relations(object, ({ one }) => ({
   owner: one(user, {
@@ -37,34 +56,30 @@ export const objectRelations = relations(object, ({ one }) => ({
   }),
 }));
 
-// export const objectRelationType = pgEnum("object_relation_type", [
-//   "member",
-//   "parent",
-//   "next",
-//   "prev",
-//   "reference",
-// ]);
+export const objectRelationType = pgEnum("object_relation_type", [
+  "member",
+  "parent",
+  "next",
+  "prev",
+  "reference",
+]);
 
-// export const objectRelation = pgTable(
-//   "object_relation",
-//   {
-//     owner_id: text("owner_id")
-//       .notNull()
-//       .references(() => user.id, { onDelete: "cascade" }),
-//     from_object_id: uuid("from_object_id")
-//       .notNull()
-//       .references(() => object.id, { onDelete: "cascade" }),
-//     to_object_id: uuid("to_object_id")
-//       .notNull()
-//       .references(() => object.id, { onDelete: "cascade" }),
-//     type: objectRelationType("type").notNull(),
-//     position: text("position"),
-//     created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-//   },
-//   (table) => [
-//     primaryKey({ columns: [table.from_object_id, table.to_object_id, table.type] }),
-//     index("object_relation_owner_idx").on(table.owner_id),
-//     index("object_relation_from_idx").on(table.from_object_id, table.type),
-//     index("object_relation_to_idx").on(table.to_object_id, table.type),
-//   ],
-// );
+export const objectRelation = pgTable(
+  "object_relation",
+  {
+    from_object_id: uuid("from_object_id")
+      .notNull()
+      .references(() => object.id, { onDelete: "cascade" }),
+    to_object_id: uuid("to_object_id")
+      .notNull()
+      .references(() => object.id, { onDelete: "cascade" }),
+    type: objectRelationType("type").notNull(),
+    position: text("position"),
+    created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.from_object_id, table.to_object_id, table.type] }),
+    index("object_relation_from_idx").on(table.from_object_id, table.type),
+    index("object_relation_to_idx").on(table.to_object_id, table.type),
+  ],
+);

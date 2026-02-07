@@ -3,15 +3,19 @@ import z from "zod";
 
 import { object } from "@anle/db/schema/object";
 
+const knownTypes = ["novel", "volume", "chapter"] as const;
+
 const objectInsertSchema = createInsertSchema(object, {
   id: z.uuid(),
-  name: (schema) => schema.max(255),
+  name: (schema) => schema.trim().min(1, "Label is required").max(255, "Label is too long"),
+  type: z.enum(knownTypes),
 });
 
 const updateSchema = createUpdateSchema(object, {
   id: z.uuid(),
-  name: (schema) => schema.max(255),
+  name: (schema) => schema.trim().min(1, "Label is required").max(255, "Label is too long"),
   updated_at: z.date(),
+  type: z.enum(knownTypes),
 })
   .strict()
   .omit({ created_at: true, owner_id: true });

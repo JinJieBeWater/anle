@@ -1,9 +1,9 @@
-import { db } from "@anle/db";
 import { objectUpdate } from "@anle/db/schema/object-update";
-import { and, eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 
 import type { ProtectedContext } from "../../index";
 import type { ObjectUpdateInput } from "./schema";
+import { withRls } from "../../rls";
 
 export const objectUpdateService = {
   create: async ({
@@ -16,10 +16,9 @@ export const objectUpdateService = {
     const ownerId = context.session.user.id;
     const value = {
       ...input,
-      owner_id: ownerId,
       update_data: Buffer.from(input.update_data, "base64"),
     };
-    return await db.insert(objectUpdate).values(value);
+    return await withRls(ownerId, (tx) => tx.insert(objectUpdate).values(value));
   },
 
   batchCreate: async ({
@@ -32,10 +31,9 @@ export const objectUpdateService = {
     const ownerId = context.session.user.id;
     const values = input.map((item) => ({
       ...item,
-      owner_id: ownerId,
       update_data: Buffer.from(item.update_data, "base64"),
     }));
-    return await db.insert(objectUpdate).values(values);
+    return await withRls(ownerId, (tx) => tx.insert(objectUpdate).values(values));
   },
 
   batchDelete: async ({
@@ -49,9 +47,9 @@ export const objectUpdateService = {
     if (input.length === 0) {
       return { deleted: 0 };
     }
-    const result = await db
-      .delete(objectUpdate)
-      .where(and(eq(objectUpdate.owner_id, ownerId), inArray(objectUpdate.id, input)));
+    const result = await withRls(ownerId, (tx) =>
+      tx.delete(objectUpdate).where(inArray(objectUpdate.id, input)),
+    );
     return { deleted: result.rowCount ?? 0 };
   },
 };

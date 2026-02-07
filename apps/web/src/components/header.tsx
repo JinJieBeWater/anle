@@ -26,10 +26,7 @@ export default function Header({ className, ...props }: ComponentProps<"div">) {
   ];
   return (
     <div
-      className={cn(
-        "sticky top-0 z-50 flex w-full items-center bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60",
-        className,
-      )}
+      className={cn("sticky top-0 z-50 flex w-full items-center bg-transparent", className)}
       {...props}
     >
       <div className="flex h-(--header-height) w-full items-center gap-2 px-4 justify-between">

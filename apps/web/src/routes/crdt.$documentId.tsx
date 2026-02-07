@@ -1,35 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
 import { objectCollection, objectTemplateCollection } from "@/lib/collections";
 import { useLiveQuery, eq } from "@tanstack/react-db";
-import { useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { Editor } from "@/components/editor/editor";
-import { useEditor } from "@/hooks/use-editor";
 import { GuardBySync } from "@/components/guard-by-sync";
+import { RichtextEditorCard } from "@/components/richtext-editor-card";
 import type { ObjectTemplateConfig } from "@anle/db/schema/object-template";
+import { shouldNeverHappen } from "@/utils/should-never-happen";
 
 export const Route = createFileRoute("/crdt/$documentId")({
   component: RouteComponent,
@@ -39,10 +14,10 @@ export const Route = createFileRoute("/crdt/$documentId")({
         {
           type: "entry",
           label: "Entry",
-          metadataFields: [
+          metadata: [
             {
               key: "content",
-              type: "richText",
+              type: "richtext",
             },
           ],
         },
@@ -144,125 +119,17 @@ function RouteComponent() {
     [documentId],
   );
 
-  const {
-    isLoaded,
-    editor,
-    charactersCount,
-    wordsCount,
-    characterLimit,
-    percentage,
-    isLimitReached,
-    gcUpdates,
-  } = useEditor(documentId);
-
-  const gcMutation = useMutation({
-    mutationFn: () => gcUpdates(),
-  });
-
-  const handleGc = async () => {
-    try {
-      const result = await gcMutation.mutateAsync();
-      toast.success(result.success);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "GC failed.");
-    }
-  };
+  if (!object) throw shouldNeverHappen("Object not found");
 
   return (
     <GuardBySync>
       <div className="mx-auto w-full max-w-3xl px-4 py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>{object?.name ?? "CRDT Demo"}</CardTitle>
-            <CardDescription>PowerSync + TipTap integration example.</CardDescription>
-            <CardAction className="flex gap-2">
-              <AlertDialog>
-                <AlertDialogTrigger
-                  render={
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={gcMutation.isPending}
-                      className="disabled:text-foreground disabled:opacity-100"
-                    />
-                  }
-                >
-                  {gcMutation.isPending ? "Compacting..." : "Compact (GC)"}
-                </AlertDialogTrigger>
-                <AlertDialogContent size="sm">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Confirm sync before compacting</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Ensure all other clients have finished syncing before you compact, or you may
-                      lose updates that have not synced yet.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleGc} disabled={gcMutation.isPending}>
-                      {gcMutation.isPending ? "Compacting..." : "Compact"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </CardAction>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="border border-input bg-background/60 focus-within:ring-1 focus-within:ring-ring/50">
-              {isLoaded ? (
-                <Editor
-                  editor={editor}
-                  className="h-[60vh] [&_.ProseMirror]:min-h-65 [&_.ProseMirror]:px-4 [&_.ProseMirror]:py-3 [&_.ProseMirror]:text-sm [&_.ProseMirror]:leading-7 [&_.ProseMirror]:outline-none [&_.ProseMirror]:pb-80 [&_.ProseMirror]:wrap-anywhere!"
-                />
-              ) : (
-                <ScrollArea className="h-[60vh]">
-                  <div className="px-4 py-5 space-y-3 min-h-65">
-                    <Skeleton className="h-4 w-[85%]" />
-                    <Skeleton className="h-4 w-[92%]" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-[80%]" />
-                    <Skeleton className="h-4 w-[95%]" />
-                    <Skeleton className="h-4 w-[90%]" />
-                    <Skeleton className="h-4 w-[60%]" />
-                  </div>
-                </ScrollArea>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 text-xs">
-                <svg height="20" width="20" viewBox="0 0 20 20">
-                  <circle r="10" cx="10" cy="10" fill="var(--secondary)" />
-                  <circle
-                    r="5"
-                    cx="10"
-                    cy="10"
-                    fill="transparent"
-                    stroke="var(--primary)"
-                    strokeWidth="10"
-                    strokeDasharray={`calc(${percentage} * 31.4 / 100) 31.4`}
-                    transform="rotate(-90) translate(-20)"
-                  />
-                  <circle r="6" cx="10" cy="10" fill="var(--primary-foreground)" />
-                </svg>
-
-                <div className="leading-tight">
-                  <div
-                    className={`font-medium ${
-                      isLimitReached ? "text-destructive" : "text-foreground"
-                    }`}
-                  >
-                    {charactersCount.toLocaleString()} / {characterLimit.toLocaleString()}{" "}
-                    characters
-                  </div>
-                  <div className={isLimitReached ? "text-destructive/80" : "text-muted-foreground"}>
-                    {wordsCount.toLocaleString()} words
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <RichtextEditorCard
+          objectId={documentId}
+          fieldKey="content"
+          title={object.name}
+          description="PowerSync + TipTap integration example."
+        />
       </div>
     </GuardBySync>
   );

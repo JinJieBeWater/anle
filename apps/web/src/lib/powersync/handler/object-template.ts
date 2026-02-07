@@ -8,14 +8,14 @@ const objectTemplateCreateInputSchema = objectTemplateSchema.create
   .extend({
     created_at: stringToDate,
     updated_at: stringToDate,
-    config: nullableStringToJson.pipe(objectTemplateConfigSchema.nullable()),
+    config: nullableStringToJson.pipe(objectTemplateConfigSchema.nullish()),
   })
   .omit({ id: true });
 
 const objectTemplatePatchSchema = objectTemplateSchema.updateBase
   .extend({
     updated_at: stringToDate,
-    config: nullableStringToJson.pipe(objectTemplateConfigSchema.nullable()),
+    config: nullableStringToJson.pipe(objectTemplateConfigSchema.nullish()),
   })
   .omit({ id: true })
   .refine(

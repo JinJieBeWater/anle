@@ -20,4 +20,4 @@ export const stringToJson = z.string().transform((val) => {
   return value as Record<string, any>;
 });
 
-export const nullableStringToJson = z.string().pipe(stringToJson).nullable();
+export const nullableStringToJson = z.string().pipe(stringToJson).nullish();

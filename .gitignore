@@ -55,8 +55,6 @@ references
 packages/mastra/.mastra/*
 
 # START Ruler Generated Files
-/.codex/config.json
-/.codex/config.json.bak
 /.codex/config.toml
 /.codex/config.toml.bak
 /.mcp.json
@@ -69,3 +67,5 @@ packages/mastra/.mastra/*
 /opencode.json.bak
 # END Ruler Generated Files
 
+.codex/config.json
+.codex/config.json.bak

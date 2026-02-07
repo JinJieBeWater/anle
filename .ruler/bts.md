@@ -80,6 +80,14 @@
 ## Web 端（TanStack Router + PowerSync）
 
 - 路由目录：`apps/web/src/routes/`。
+- 表单相关组件：`apps/web/src/components/forms/`。
+- CreateObjectDialog 关系选择控件位于表单末尾，按模板关系类型分组渲染为多个选择控件并显示关系类型。
+- 元数据工具：`apps/web/src/lib/object-metadata.ts`。
+- 模板解析工具：`apps/web/src/lib/object-template.ts`（集中处理 ObjectTemplate 配置解析）。
+- 元数据字段组件：`apps/web/src/components/forms/`（含 `metadata-field-*.tsx` 与 `metadata-field-renderer.tsx`）。
+- 模板对象 `page` 配置：`home` 表示模板首页卡片视图；`default` 或省略表示在 `/t/$templateName/$objectType` 的目录树视图。
+- 富文本编辑组件：`apps/web/src/components/editor/`（含 `richtext-editor-card.tsx`、`richtext-editor-draft-input.tsx`）。
+  - 创建对象弹窗内的富文本在表单 metadata 中维护，提交时转换为 `object_update`。
 - PowerSync 本地 SQLite：
   - 表结构定义：`apps/web/src/lib/powersync/schema/`。
   - PG 与 SQLite 类型/结构差异需要反序列化（Deserialization）。
@@ -105,6 +113,7 @@
 
 - 规则文件：`packages/infra/config/sync_rules.yaml`。
 - 当 PostgreSQL 表结构或同步字段变化时，需要同步更新该规则文件。
+- `object_relation` 通过计算 `id`（md5）供 PowerSync 本地表使用。
 
 ## 环境变量
 
@@ -128,9 +137,12 @@
 - `/dashboard`：主界面（如有）。
 - `/tanstack-db-todos`：TanStack DB + PowerSync 示例。
 - `/crdt/$documentId`：CRDT/富文本协作示例。
-- `/t/$templateName`：基于模板的对象列表页。
+- `/t/$templateName`：仅展示 `page=home` 的对象卡片。
+- `/t/$templateName/$objectType`：模板内目录树视图；若该类型为 `home`，则按 `relations(type=parent)` 展示子类型列表，并优先依据 `object_relation` 过滤到当前对象。
+- `/t/$templateName/$objectType/$objectId`：对象详情页。
 
 ## 维护提示
 
 - 当对项目做了变更时，应实时更新 .ruler\bts.md 的说明。
+- 每次修改代码后需要运行 `pnpm run check-types` 与 `pnpm run check`。
 - 更新完成后运行 pnpm run ruler:apply 以应用到相关 AI 上下文文件。

@@ -11,7 +11,7 @@ import { stringToDate } from "../zod-helpers";
 export const objectUpdateCreateInputSchema = createInsertSchema(objectUpdate, {
   created_at: stringToDate,
   update_data: z.string(),
-}).omit({ id: true, owner_id: true });
+}).omit({ id: true });
 
 type ObjectUpdateCreateInput = z.infer<typeof objectUpdateCreateInputSchema>;
 
@@ -39,14 +39,8 @@ export const objectUpdateHandler = createHandler({
         ...objectUpdateCreateInputSchema.parse(op.opData),
         id: op.id,
       }),
-      flush: async (batchObjectUpdates, context) => {
-        const owner_id = context.session.user.id;
-        await orpc.objectUpdate.batchCreate.call(
-          batchObjectUpdates.map((update) => ({
-            ...update,
-            owner_id,
-          })),
-        );
+      flush: async (batchObjectUpdates, _context) => {
+        await orpc.objectUpdate.batchCreate.call(batchObjectUpdates);
       },
     }),
     createBatcher<string>({

@@ -1,10 +1,10 @@
 import { ORPCError } from "@orpc/server";
-import { db } from "@anle/db";
 import { objectTemplate } from "@anle/db/schema/object-template";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import type { ProtectedContext } from "../../index";
 import type { ObjectTemplateInput } from "./schema";
+import { withRls } from "../../rls";
 
 export const objectTemplateService = {
   create: async ({
@@ -19,14 +19,12 @@ export const objectTemplateService = {
       ...input,
       owner_id: ownerId,
     };
-    return await db
-      .insert(objectTemplate)
-      .values(value)
-      .onConflictDoUpdate({
+    return await withRls(ownerId, (tx) =>
+      tx.insert(objectTemplate).values(value).onConflictDoUpdate({
         target: objectTemplate.id,
         set: input,
-        setWhere: and(eq(objectTemplate.owner_id, ownerId)),
-      });
+      }),
+    );
   },
 
   update: async ({
@@ -37,10 +35,9 @@ export const objectTemplateService = {
     context: ProtectedContext;
   }) => {
     const ownerId = context.session.user.id;
-    const result = await db
-      .update(objectTemplate)
-      .set(input)
-      .where(and(eq(objectTemplate.id, input.id), eq(objectTemplate.owner_id, ownerId)));
+    const result = await withRls(ownerId, (tx) =>
+      tx.update(objectTemplate).set(input).where(eq(objectTemplate.id, input.id)),
+    );
     if ((result.rowCount ?? 0) === 0) {
       throw new ORPCError("NOT_FOUND");
     }
@@ -55,9 +52,9 @@ export const objectTemplateService = {
     context: ProtectedContext;
   }) => {
     const ownerId = context.session.user.id;
-    const result = await db
-      .delete(objectTemplate)
-      .where(and(eq(objectTemplate.id, input.id), eq(objectTemplate.owner_id, ownerId)));
+    const result = await withRls(ownerId, (tx) =>
+      tx.delete(objectTemplate).where(eq(objectTemplate.id, input.id)),
+    );
     if ((result.rowCount ?? 0) === 0) {
       throw new ORPCError("NOT_FOUND");
     }

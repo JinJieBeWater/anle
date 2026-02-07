@@ -8,152 +8,226 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as TanstackDbTodosRouteImport } from "./routes/tanstack-db-todos";
-import { Route as LoginRouteImport } from "./routes/login";
-import { Route as DashboardRouteImport } from "./routes/dashboard";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as CrdtDocumentIdRouteImport } from "./routes/crdt.$documentId";
-import { Route as TTemplateNameIndexRouteImport } from "./routes/t.$templateName.index";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as TanstackDbTodosRouteImport } from './routes/tanstack-db-todos'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as CrdtDocumentIdRouteImport } from './routes/crdt.$documentId'
+import { Route as TTemplateNameIndexRouteImport } from './routes/t.$templateName.index'
+import { Route as TTemplateNameObjectTypeRouteImport } from './routes/t.$templateName.$objectType'
+import { Route as TTemplateNameObjectTypeIndexRouteImport } from './routes/t.$templateName.$objectType.index'
+import { Route as TTemplateNameObjectTypeObjectIdRouteImport } from './routes/t.$templateName.$objectType.$objectId'
 
 const TanstackDbTodosRoute = TanstackDbTodosRouteImport.update({
-  id: "/tanstack-db-todos",
-  path: "/tanstack-db-todos",
+  id: '/tanstack-db-todos',
+  path: '/tanstack-db-todos',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const LoginRoute = LoginRouteImport.update({
-  id: "/login",
-  path: "/login",
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
-  id: "/dashboard",
-  path: "/dashboard",
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const CrdtDocumentIdRoute = CrdtDocumentIdRouteImport.update({
-  id: "/crdt/$documentId",
-  path: "/crdt/$documentId",
+  id: '/crdt/$documentId',
+  path: '/crdt/$documentId',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const TTemplateNameIndexRoute = TTemplateNameIndexRouteImport.update({
-  id: "/t/$templateName/",
-  path: "/t/$templateName/",
+  id: '/t/$templateName/',
+  path: '/t/$templateName/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
+const TTemplateNameObjectTypeRoute = TTemplateNameObjectTypeRouteImport.update({
+  id: '/t/$templateName/$objectType',
+  path: '/t/$templateName/$objectType',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TTemplateNameObjectTypeIndexRoute =
+  TTemplateNameObjectTypeIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => TTemplateNameObjectTypeRoute,
+  } as any)
+const TTemplateNameObjectTypeObjectIdRoute =
+  TTemplateNameObjectTypeObjectIdRouteImport.update({
+    id: '/$objectId',
+    path: '/$objectId',
+    getParentRoute: () => TTemplateNameObjectTypeRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/dashboard": typeof DashboardRoute;
-  "/login": typeof LoginRoute;
-  "/tanstack-db-todos": typeof TanstackDbTodosRoute;
-  "/crdt/$documentId": typeof CrdtDocumentIdRoute;
-  "/t/$templateName/": typeof TTemplateNameIndexRoute;
+  '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/tanstack-db-todos': typeof TanstackDbTodosRoute
+  '/crdt/$documentId': typeof CrdtDocumentIdRoute
+  '/t/$templateName/$objectType': typeof TTemplateNameObjectTypeRouteWithChildren
+  '/t/$templateName/': typeof TTemplateNameIndexRoute
+  '/t/$templateName/$objectType/$objectId': typeof TTemplateNameObjectTypeObjectIdRoute
+  '/t/$templateName/$objectType/': typeof TTemplateNameObjectTypeIndexRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/dashboard": typeof DashboardRoute;
-  "/login": typeof LoginRoute;
-  "/tanstack-db-todos": typeof TanstackDbTodosRoute;
-  "/crdt/$documentId": typeof CrdtDocumentIdRoute;
-  "/t/$templateName": typeof TTemplateNameIndexRoute;
+  '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/tanstack-db-todos': typeof TanstackDbTodosRoute
+  '/crdt/$documentId': typeof CrdtDocumentIdRoute
+  '/t/$templateName': typeof TTemplateNameIndexRoute
+  '/t/$templateName/$objectType/$objectId': typeof TTemplateNameObjectTypeObjectIdRoute
+  '/t/$templateName/$objectType': typeof TTemplateNameObjectTypeIndexRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/dashboard": typeof DashboardRoute;
-  "/login": typeof LoginRoute;
-  "/tanstack-db-todos": typeof TanstackDbTodosRoute;
-  "/crdt/$documentId": typeof CrdtDocumentIdRoute;
-  "/t/$templateName/": typeof TTemplateNameIndexRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/tanstack-db-todos': typeof TanstackDbTodosRoute
+  '/crdt/$documentId': typeof CrdtDocumentIdRoute
+  '/t/$templateName/$objectType': typeof TTemplateNameObjectTypeRouteWithChildren
+  '/t/$templateName/': typeof TTemplateNameIndexRoute
+  '/t/$templateName/$objectType/$objectId': typeof TTemplateNameObjectTypeObjectIdRoute
+  '/t/$templateName/$objectType/': typeof TTemplateNameObjectTypeIndexRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | "/dashboard"
-    | "/login"
-    | "/tanstack-db-todos"
-    | "/crdt/$documentId"
-    | "/t/$templateName/";
-  fileRoutesByTo: FileRoutesByTo;
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/tanstack-db-todos'
+    | '/crdt/$documentId'
+    | '/t/$templateName/$objectType'
+    | '/t/$templateName/'
+    | '/t/$templateName/$objectType/$objectId'
+    | '/t/$templateName/$objectType/'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
-    | "/dashboard"
-    | "/login"
-    | "/tanstack-db-todos"
-    | "/crdt/$documentId"
-    | "/t/$templateName";
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/tanstack-db-todos'
+    | '/crdt/$documentId'
+    | '/t/$templateName'
+    | '/t/$templateName/$objectType/$objectId'
+    | '/t/$templateName/$objectType'
   id:
-    | "__root__"
-    | "/"
-    | "/dashboard"
-    | "/login"
-    | "/tanstack-db-todos"
-    | "/crdt/$documentId"
-    | "/t/$templateName/";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/tanstack-db-todos'
+    | '/crdt/$documentId'
+    | '/t/$templateName/$objectType'
+    | '/t/$templateName/'
+    | '/t/$templateName/$objectType/$objectId'
+    | '/t/$templateName/$objectType/'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  DashboardRoute: typeof DashboardRoute;
-  LoginRoute: typeof LoginRoute;
-  TanstackDbTodosRoute: typeof TanstackDbTodosRoute;
-  CrdtDocumentIdRoute: typeof CrdtDocumentIdRoute;
-  TTemplateNameIndexRoute: typeof TTemplateNameIndexRoute;
+  IndexRoute: typeof IndexRoute
+  DashboardRoute: typeof DashboardRoute
+  LoginRoute: typeof LoginRoute
+  TanstackDbTodosRoute: typeof TanstackDbTodosRoute
+  CrdtDocumentIdRoute: typeof CrdtDocumentIdRoute
+  TTemplateNameObjectTypeRoute: typeof TTemplateNameObjectTypeRouteWithChildren
+  TTemplateNameIndexRoute: typeof TTemplateNameIndexRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/tanstack-db-todos": {
-      id: "/tanstack-db-todos";
-      path: "/tanstack-db-todos";
-      fullPath: "/tanstack-db-todos";
-      preLoaderRoute: typeof TanstackDbTodosRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/login": {
-      id: "/login";
-      path: "/login";
-      fullPath: "/login";
-      preLoaderRoute: typeof LoginRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/dashboard": {
-      id: "/dashboard";
-      path: "/dashboard";
-      fullPath: "/dashboard";
-      preLoaderRoute: typeof DashboardRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/crdt/$documentId": {
-      id: "/crdt/$documentId";
-      path: "/crdt/$documentId";
-      fullPath: "/crdt/$documentId";
-      preLoaderRoute: typeof CrdtDocumentIdRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/t/$templateName/": {
-      id: "/t/$templateName/";
-      path: "/t/$templateName";
-      fullPath: "/t/$templateName/";
-      preLoaderRoute: typeof TTemplateNameIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+    '/tanstack-db-todos': {
+      id: '/tanstack-db-todos'
+      path: '/tanstack-db-todos'
+      fullPath: '/tanstack-db-todos'
+      preLoaderRoute: typeof TanstackDbTodosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crdt/$documentId': {
+      id: '/crdt/$documentId'
+      path: '/crdt/$documentId'
+      fullPath: '/crdt/$documentId'
+      preLoaderRoute: typeof CrdtDocumentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/t/$templateName/': {
+      id: '/t/$templateName/'
+      path: '/t/$templateName'
+      fullPath: '/t/$templateName/'
+      preLoaderRoute: typeof TTemplateNameIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/t/$templateName/$objectType': {
+      id: '/t/$templateName/$objectType'
+      path: '/t/$templateName/$objectType'
+      fullPath: '/t/$templateName/$objectType'
+      preLoaderRoute: typeof TTemplateNameObjectTypeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/t/$templateName/$objectType/': {
+      id: '/t/$templateName/$objectType/'
+      path: '/'
+      fullPath: '/t/$templateName/$objectType/'
+      preLoaderRoute: typeof TTemplateNameObjectTypeIndexRouteImport
+      parentRoute: typeof TTemplateNameObjectTypeRoute
+    }
+    '/t/$templateName/$objectType/$objectId': {
+      id: '/t/$templateName/$objectType/$objectId'
+      path: '/$objectId'
+      fullPath: '/t/$templateName/$objectType/$objectId'
+      preLoaderRoute: typeof TTemplateNameObjectTypeObjectIdRouteImport
+      parentRoute: typeof TTemplateNameObjectTypeRoute
+    }
   }
 }
+
+interface TTemplateNameObjectTypeRouteChildren {
+  TTemplateNameObjectTypeObjectIdRoute: typeof TTemplateNameObjectTypeObjectIdRoute
+  TTemplateNameObjectTypeIndexRoute: typeof TTemplateNameObjectTypeIndexRoute
+}
+
+const TTemplateNameObjectTypeRouteChildren: TTemplateNameObjectTypeRouteChildren =
+  {
+    TTemplateNameObjectTypeObjectIdRoute: TTemplateNameObjectTypeObjectIdRoute,
+    TTemplateNameObjectTypeIndexRoute: TTemplateNameObjectTypeIndexRoute,
+  }
+
+const TTemplateNameObjectTypeRouteWithChildren =
+  TTemplateNameObjectTypeRoute._addFileChildren(
+    TTemplateNameObjectTypeRouteChildren,
+  )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -161,8 +235,9 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   TanstackDbTodosRoute: TanstackDbTodosRoute,
   CrdtDocumentIdRoute: CrdtDocumentIdRoute,
+  TTemplateNameObjectTypeRoute: TTemplateNameObjectTypeRouteWithChildren,
   TTemplateNameIndexRoute: TTemplateNameIndexRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
